@@ -1,1 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>Pepe's Karaoke Bar</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pepe's KJ">
+<meta name="theme-color" content="#08080f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Pepe's Karaoke Bar - Join the waitlist!">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎤</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
+<!-- ═══════════════════════════════════════════════════
+     FIREBASE SDK — Do NOT remove
+     ═══════════════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<style>
+:root{
+  --bg:#08080f;--card:#111120;--pink:#ff2d8a;--yellow:#ffe14d;--green:#39ff73;
+  --blue:#4de1ff;--orange:#ff6b35;--red:#ff4466;--text:#fff;--dim:#7a7a99;
+  --input:#1a1a30;--border:#262640;--singing:#ff6b35;--purple:#b44dff;--gold:#ffd700;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{min-height:100vh;min-height:-webkit-fill-available;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);overflow-x:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0}
+@keyframes su{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+@keyframes mc{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes pu{0%,100%{opacity:.5}50%{opacity:1}}
+.sl{animation:su .35s ease both}.fi{animation:fi .25s ease both}
+.mc{animation:mc 2s ease-in-out infinite;display:inline-block}
+input::placeholder,textarea::placeholder{color:#7a7a9977}
+input:focus,textarea:focus,select:focus{border-color:var(--pink)!important;box-shadow:0 0 0 3px rgba(255,45,138,.13)!important}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M3 5l3 3 3-3' stroke='%237a7a99' fill='none' stroke-width='1.5'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+textarea{resize:vertical;min-height:60px}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.wrap{max-width:480px;margin:0 auto;padding:0 16px 60px;position:relative;z-index:1}
+.glow1{position:fixed;top:-150px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(255,45,138,.07) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.glow2{position:fixed;bottom:-120px;right:-80px;width:380px;height:380px;background:radial-gradient(circle,rgba(77,225,255,.05) 0%,transparent 70%);border-radius:50%;pointer-events:none}
+.s-input{width:100%;padding:12px 14px;background:var(--input);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;outline:none;box-sizing:border-box;font-family:inherit;transition:border .2s,box-shadow .2s;-webkit-appearance:none}
+.s-label{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px}
+.s-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 18px;margin-bottom:14px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:16px 0 8px}
+.nav-logo{display:flex;align-items:center;gap:7px}
+.nav-logo span:last-child{font-family:'Outfit',sans-serif;font-weight:900;font-size:17px;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-tabs{display:flex;background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.nav-tab{padding:7px 13px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.nav-tab.active{background:rgba(255,45,138,.13);color:var(--pink)}
+.nav-tab:not(.active){background:transparent;color:var(--dim)}
+.hidden{display:none!important}
+.toggle{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:background .2s}
+.toggle .dot{width:18px;height:18px;border-radius:9px;background:#fff;position:absolute;top:3px;transition:left .2s}
+.toggle.on{background:var(--green)}.toggle.on .dot{left:23px}
+.toggle.off{background:var(--border)}.toggle.off .dot{left:3px}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:9px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:100;animation:fi .3s ease}
+.pill{padding:7px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.pill.active{border:1px solid rgba(180,77,255,.4);background:rgba(180,77,255,.1);color:var(--purple)}
+.pill:not(.active){border:1px solid var(--border);background:transparent;color:var(--dim)}
+.setup-box{max-width:380px;margin:60px auto;text-align:center;padding:30px 20px;background:var(--card);border-radius:16px;border:1px solid var(--border)}
+.setup-box h2{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;margin:10px 0}
+.setup-box p{color:var(--dim);font-size:13px;line-height:1.6;margin:8px 0}
+.setup-box code{background:var(--input);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--yellow)}
+</style>
+</head>
+<body>
+
+<div class="glow1"></div><div class="glow2"></div>
+
+<!-- Setup screen (shown if Firebase not configured) -->
+<div id="setupScreen" class="hidden">
+  <div class="setup-box">
+    <div style="font-size:48px;margin-bottom:6px">⚙️</div>
+    <h2>Setup Required</h2>
+    <p>Open <code>index.html</code> and paste your Firebase config in the <code>firebaseConfig</code> section at the bottom of the file.</p>
+    <p style="margin-top:16px">See the README.md for step-by-step instructions!</p>
+  </div>
+</div>
+
+<!-- App (shown when Firebase is ready) -->
+<div id="app" class="hidden">
+<div class="wrap">
+
+  <!-- NAV -->
+  <div class="nav">
+    <div class="nav-logo"><span style="font-size:20px">🌶️</span><span id="navName">PEPE'S</span></div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="switchMode('singer')">🎤 Singer</button>
+      <button class="nav-tab" onclick="switchMode('kj')">🎧 KJ</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SINGER: WELCOME ═══════════ -->
+  <div id="singerWelcome" class="sl">
+    <div style="text-align:center;padding-top:24px">
+      <div class="mc" style="font-size:56px;margin-bottom:8px">🎤</div>
+      <h1 id="welcomeTitle" style="font-family:'Outfit';font-size:32px;font-weight:900;margin:6px 0 0;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Welcome to PEPE'S</h1>
+      <p id="welcomeTagline" style="color:var(--pink);font-size:13px;letter-spacing:5px;text-transform:uppercase;font-weight:600;margin:3px 0 0">Karaoke Bar</p>
+      <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,var(--pink),transparent);margin:18px auto"></div>
+      <p style="color:var(--dim);font-size:14px;line-height:1.6;max-width:300px;margin:0 auto 24px">Ready to sing? Join the waitlist and we'll get you on stage!</p>
+
+      <div id="nowSingingBanner" class="hidden" style="background:rgba(255,107,53,.07);border:1px solid rgba(255,107,53,.2);border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:26px;animation:pu 2s infinite">🎙️</div>
+        <div style="text-align:left">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--singing);font-weight:700">Now Singing</div>
+          <div id="nowSingingName" style="font-size:15px;font-weight:700"></div>
+          <div id="nowSingingInfo" style="font-size:12px;color:var(--dim)"></div>
+        </div>
+      </div>
+
+      <div style="background:var(--card);border-radius:12px;padding:14px 20px;margin-bottom:22px;border:1px solid var(--border);display:flex;justify-content:center;gap:28px">
+        <div style="text-align:center"><div id="waitCount" style="font-size:26px;font-weight:900;font-family:'Outfit';color:var(--green)">0</div><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">In Line</div></div>
+        <div style="width:1px;background:var(--border)"></div>
+        <div style="text-align:center"><div id="totalCount" style="font-size:26px;font-weight:900;font-family:'Outfit';color:var(--blue)">0</div><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Total</div></div>
+      </div>
+
+      <button onclick="showView('singerForm')" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;font-family:'Outfit';cursor:pointer;letter-spacing:1px;box-shadow:0 6px 24px rgba(255,45,138,.2);margin-bottom:16px">Join the Waitlist 🎶</button>
+
+      <!-- Compact tip -->
+      <div id="welcomeTip" style="background:linear-gradient(135deg,rgba(255,215,0,.05),rgba(255,107,53,.03));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center">
+        <div style="font-size:24px;margin-bottom:4px">💰</div>
+        <div id="welcomeTipTitle" style="font-family:'Outfit';font-size:15px;font-weight:800;color:var(--gold);margin-bottom:2px">Tip Your KJ</div>
+        <button onclick="showView('singerTip')" style="padding:10px 20px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;font-family:'Outfit';margin-top:6px">💛 Leave a Tip</button>
+      </div>
+
+      <div id="eventsSection"></div>
+      <div id="offerSection"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SINGER: FORM ═══════════ -->
+  <div id="singerForm" class="hidden sl">
+    <button onclick="showView('singerWelcome')" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:10px 0;font-family:inherit">← Back</button>
+    <div class="s-card">
+      <h2 style="font-family:'Outfit';font-size:17px;font-weight:800;color:var(--green);margin:0 0 5px;letter-spacing:1px">🎵 Song Request</h2>
+      <p style="font-size:12px;color:var(--dim);margin:0 0 18px">Fill out the form to get on stage</p>
+      <div style="margin-bottom:14px"><label class="s-label">👤 Your Name</label><input class="s-input" id="fName" type="text" placeholder="e.g. Maria" autocomplete="name"></div>
+      <div style="margin-bottom:14px"><label class="s-label">📱 Phone Number</label><input class="s-input" id="fPhone" type="tel" placeholder="e.g. (555) 123-4567" autocomplete="tel"></div>
+      <div style="margin-bottom:14px"><label class="s-label">🎵 Song Title</label><input class="s-input" id="fSong" type="text" placeholder="e.g. Bohemian Rhapsody"></div>
+      <div style="margin-bottom:14px"><label class="s-label">🎸 Artist</label><input class="s-input" id="fAuthor" type="text" placeholder="e.g. Queen"></div>
+      <button id="submitBtn" onclick="submitSong()" style="width:100%;padding:15px;background:var(--border);color:var(--dim);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;letter-spacing:1px;text-transform:uppercase;font-family:'Outfit';transition:all .2s">Submit Request 🎤</button>
+    </div>
+    <div class="s-card" style="padding:0;overflow:hidden">
+      <button onclick="togglePolicy()" style="width:100%;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:var(--text);cursor:pointer;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:inherit">
+        <span>📜 Karaoke Rules</span><span id="policyArrow" style="transition:transform .3s;font-size:10px">▼</span>
+      </button>
+      <div id="policyContent" class="hidden fi" style="padding:0 16px 16px;font-size:12px;line-height:1.7;color:var(--dim)"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SINGER: CONFIRMED ═══════════ -->
+  <div id="singerDone" class="hidden sl" style="text-align:center;padding-top:24px">
+    <div style="font-size:50px;margin-bottom:6px">🎉</div>
+    <h2 style="font-family:'Outfit';font-size:22px;font-weight:900;color:var(--green);margin:0 0 4px">You're In!</h2>
+    <p style="color:var(--dim);font-size:13px;margin-bottom:20px">Get ready to sing!</p>
+    <div id="positionCard"></div>
+    <div id="songSummary" class="s-card" style="text-align:left;margin-bottom:16px"></div>
+    <div id="tipFull"></div>
+    <button onclick="resetSinger()" style="padding:10px 24px;background:none;border:1px solid var(--border);color:var(--dim);border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">← Back to Home</button>
+  </div>
+
+  <!-- ═══════════ SINGER: TIP PAGE ═══════════ -->
+  <div id="singerTip" class="hidden sl" style="padding-top:10px">
+    <button onclick="showView('singerWelcome')" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:10px 0;font-family:inherit">← Back</button>
+    <div id="tipPageContent"></div>
+  </div>
+
+  <!-- ═══════════ KJ: LOGIN ═══════════ -->
+  <div id="kjLogin" class="hidden sl" style="text-align:center;padding-top:50px">
+    <div style="font-size:44px;margin-bottom:10px">🎧</div>
+    <h2 style="font-family:'Outfit';font-size:20px;font-weight:800;margin:0 0 5px">KJ Dashboard</h2>
+    <p style="color:var(--dim);font-size:13px;margin:0 0 24px">Enter PIN to access</p>
+    <div style="max-width:240px;margin:0 auto">
+      <input class="s-input" id="pinInput" type="password" placeholder="PIN" maxlength="6" style="font-size:22px;text-align:center;letter-spacing:12px">
+      <div id="pinError" class="hidden" style="color:var(--red);font-size:12px;margin-top:6px">Wrong PIN</div>
+      <button onclick="kjLoginCheck()" style="width:100%;margin-top:14px;padding:16px;background:linear-gradient(135deg,var(--blue),var(--green));color:#000;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Outfit';letter-spacing:1px">Unlock 🔓</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ KJ: DASHBOARD ═══════════ -->
+  <div id="kjDash" class="hidden sl">
+    <div style="display:flex;gap:0;margin-bottom:14px;background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden">
+      <button class="nav-tab active" style="flex:1;padding:10px 8px;font-size:13px;font-weight:700" onclick="switchKjTab('queue')">🎤 Queue</button>
+      <button class="nav-tab" style="flex:1;padding:10px 8px;font-size:13px;font-weight:700" onclick="switchKjTab('manage')">⚙️ Manage</button>
+    </div>
+    <div id="kjQueue"></div>
+    <div id="kjManage" class="hidden"></div>
+    <div style="text-align:center;padding-top:14px"><button onclick="kjLock()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:9px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔒 Lock</button></div>
+  </div>
+
+  <!-- FOOTER (singer views) -->
+  <div id="singerFooter" style="text-align:center;padding:28px 0 10px;margin-top:18px;border-top:1px solid var(--border)">
+    <div id="footerInfo" style="font-size:11px;color:var(--dim);line-height:1.8"></div>
+    <div id="footerSocial" style="font-size:11px;color:var(--pink);font-weight:600;margin-top:6px"></div>
+    <div id="footerCopy" style="font-size:9px;color:var(--dim);margin-top:10px;opacity:.4"></div>
+  </div>
+
+</div>
+</div>
+
+<div id="toastEl" class="toast hidden"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   🔥 FIREBASE CONFIG — PASTE YOUR CONFIG HERE
+   ═══════════════════════════════════════════════════════════
+   Go to: https://console.firebase.google.com
+   → Your project → Project Settings → General → Your apps
+   → Copy the firebaseConfig object and paste below
+   ═══════════════════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCb7O10C9qL4oGHl5_ZGAbWVmLht5QPSy8",
+  authDomain: "pepes-karaoke-waitlist.firebaseapp.com",
+  databaseURL: "https://pepes-karaoke-waitlist-default-rtdb.firebaseio.com",
+  projectId: "pepes-karaoke-waitlist",
+  storageBucket: "pepes-karaoke-waitlist.firebasestorage.app",
+  messagingSenderId: "212109120740",
+  appId: "1:212109120740:web:1840e8eb3842bcd20d08f1"
+};
+/* ═══════════════════════════════════════════════════════════ */
+
+// ── Check if configured ──
+var isConfigured = firebaseConfig.apiKey && firebaseConfig.databaseURL;
+var db;
+
+try {
+  if (isConfigured && typeof firebase !== 'undefined') {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    document.getElementById('app').classList.remove('hidden');
+  } else if (isConfigured && typeof firebase === 'undefined') {
+    // Firebase SDK failed to load (old browser / network issue)
+    document.getElementById('app').classList.remove('hidden');
+    isConfigured = false;
+  } else {
+    document.getElementById('setupScreen').classList.remove('hidden');
+  }
+} catch(e) {
+  // If Firebase crashes, still show the app in offline mode
+  document.getElementById('app').classList.remove('hidden');
+  isConfigured = false;
+}
+
+// Global error handler to prevent black screen
+window.onerror = function(msg, url, line) {
+  var app = document.getElementById('app');
+  if (app && app.classList.contains('hidden')) {
+    app.classList.remove('hidden');
+  }
+  return false;
+};
+
+// ═══════ STATE ═══════
+let state = {
+  mode: 'singer',
+  singerView: 'singerWelcome',
+  queue: [],
+  myId: null,
+  kjAuth: false,
+  bar: {name:"PEPE'S",tagline:"Karaoke Bar",address:"123 Main Street, Portland, OR 97201",phone:"(555) 123-4567",hours:"Tues–Sat · 7 PM – 2 AM",social:"@pepeskaraoke",kjPin:"1234"},
+  events: [
+    {id:"1",day:"TUE",name:"Open Mic Night",detail:"$3 wells all night",color:"#39ff73"},
+    {id:"2",day:"WED",name:"Ladies Night Karaoke",detail:"½ off margaritas",color:"#ff2d8a"},
+    {id:"3",day:"FRI",name:"Karaoke Battle Royale",detail:"$50 bar tab prize",color:"#ffe14d"},
+    {id:"4",day:"SAT",name:"DJ + Karaoke Party",detail:"Live DJ between sets",color:"#4de1ff"}
+  ],
+  offer: {emoji:"🍹",title:"SING & SIP SPECIAL",text:"Show this screen after your song for 10% off your next drink!",active:true},
+  rules:["One song per turn — back of the line after.","Keep it fun & respectful on stage.","KJ's decision is final on song order.","No duplicate songs the same night.","Be ready when called — or lose your spot.","5 min limit per song. Duets = one slot.","Must be 21+. Valid ID required."],
+  tips:{enabled:true,headline:"Tip Your KJ",subtitle:"Show some love — tips keep the music going! 🎶",amounts:[3,5,10,20],venmo:{enabled:true,handle:"pepesKJ"},cashapp:{enabled:true,handle:"$pepesKJ"},paypal:{enabled:true,handle:"pepesKJ"},customAmount:true},
+  selectedTip:null,customTip:"",
+  kjTab:'queue',mgmtSection:'events',
+  customers:[],customerSearch:"",editingEvent:null,
+};
+
+// ═══════ FIREBASE LISTENERS ═══════
+if (isConfigured && db) {
+  try {
+    ['queue','bar','events','offer','rules','tips','customers'].forEach(function(key) {
+      db.ref(key).on('value', function(snap) {
+        var v = snap.val();
+        if (key === 'queue') state.queue = v ? Object.values(v) : [];
+        else if (key === 'customers') state.customers = v ? Object.values(v) : [];
+        else if (v) state[key] = v;
+        render();
+      });
+    });
+  } catch(e) {}
+}
+
+function fbSet(key, val) { if(isConfigured && db) { try { db.ref(key).set(val); } catch(e) {} } }
+
+// ═══════ NAVIGATION ═══════
+function switchMode(m) {
+  state.mode = m;
+  document.querySelectorAll('.nav-tabs .nav-tab').forEach((b,i)=>{b.className='nav-tab'+(i===(m==='singer'?0:1)?' active':'');});
+  if (m==='singer') { state.singerView='singerWelcome'; }
+  else { state.singerView=''; }
+  render();
+}
+
+function showView(v) { state.singerView=v; render(); }
+
+function switchKjTab(t) {
+  state.kjTab=t;
+  document.querySelectorAll('#kjDash > div:first-child .nav-tab').forEach((b,i)=>{b.className='nav-tab'+(i===(t==='queue'?0:1)?' active':'');});
+  render();
+}
+
+// ═══════ SINGER ACTIONS ═══════
+function submitSong() {
+  const n=g('fName').value.trim(),p=g('fPhone').value.trim(),s=g('fSong').value.trim(),a=g('fAuthor').value.trim();
+  if(!n||!p||!s||!a) return;
+  const id=Date.now().toString();
+  const entry={id,name:n,phone:p,song:s,author:a,time:new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),status:'waiting'};
+  state.queue.push(entry);
+  state.myId=id;
+  fbSet('queue',arrToObj(state.queue));
+  // ── Save to permanent customer log ──
+  const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const existing=state.customers.find(c=>c.phone===p);
+  if(existing){
+    existing.name=n;existing.lastVisit=dateStr;existing.visits=(existing.visits||1)+1;
+    existing.songs=existing.songs||[];existing.songs.push({song:s,author:a,date:dateStr});
+    fbSet('customers',arrToObj(state.customers));
+  } else {
+    const cust={id:'c'+id,name:n,phone:p,firstVisit:dateStr,lastVisit:dateStr,visits:1,songs:[{song:s,author:a,date:dateStr}]};
+    state.customers.push(cust);
+    fbSet('customers',arrToObj(state.customers));
+  }
+  state.selectedTip=null;state.customTip="";
+  showView('singerDone');
+}
+
+function resetSinger(){state.myId=null;g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';state.selectedTip=null;state.customTip="";showView('singerWelcome');}
+
+// ═══════ KJ ACTIONS ═══════
+function kjLoginCheck(){
+  if(g('pinInput').value===state.bar.kjPin){state.kjAuth=true;g('pinError').classList.add('hidden');render();}
+  else{g('pinError').classList.remove('hidden');}
+}
+function kjLock(){state.kjAuth=false;g('pinInput').value='';render();}
+function nowSinging(id){state.queue=state.queue.map(s=>({...s,status:s.id===id?'singing':(s.status==='singing'?'waiting':s.status)}));fbSet('queue',arrToObj(state.queue));}
+function removeSinger(id){state.queue=state.queue.filter(s=>s.id!==id);fbSet('queue',arrToObj(state.queue));toast('Removed');}
+function moveQ(i,dir){const j=i+dir;if(j<0||j>=state.queue.length)return;const q=[...state.queue];[q[i],q[j]]=[q[j],q[i]];state.queue=q;fbSet('queue',arrToObj(state.queue));}
+function clearQueue(){state.queue=[];fbSet('queue',null);toast('Queue cleared');}
+
+// ═══════ MGMT ACTIONS ═══════
+function saveBar(){fbSet('bar',state.bar);toast('Bar info saved');}
+function saveEvents(){fbSet('events',state.events);toast('Events saved');}
+function saveOffer(){fbSet('offer',state.offer);toast('Offer saved');}
+function saveRules(){fbSet('rules',state.rules);toast('Rules saved');}
+function saveTips(){fbSet('tips',state.tips);toast('Tips saved');}
+function deleteEvent(id){state.events=state.events.filter(e=>e.id!==id);saveEvents();}
+function deleteRule(i){state.rules.splice(i,1);saveRules();}
+function moveRule(i,dir){const j=i+dir;if(j<0||j>=state.rules.length)return;[state.rules[i],state.rules[j]]=[state.rules[j],state.rules[i]];saveRules();}
+
+function togglePolicy(){g('policyContent').classList.toggle('hidden');g('policyArrow').style.transform=g('policyContent').classList.contains('hidden')?'none':'rotate(180deg)';}
+
+// ═══════ TIP HELPERS ═══════
+function selectTip(amt){state.selectedTip=state.selectedTip===amt?null:amt;if(amt!=='custom')state.customTip="";render();}
+function setCustomTip(v){state.customTip=v;render();}
+function openTipLink(platform){
+  const amt=state.selectedTip==='custom'?(parseFloat(state.customTip)||0):state.selectedTip;
+  if(!amt)return;
+  const note=encodeURIComponent('🎤 KJ Tip at '+state.bar.name);
+  const t=state.tips;let url='';
+  if(platform==='venmo')url=`https://venmo.com/${t.venmo.handle}?txn=pay&amount=${amt}&note=${note}`;
+  else if(platform==='cashapp'){const h=t.cashapp.handle.replace(/^\$/,'');url=`https://cash.app/$${h}/${amt}`;}
+  else if(platform==='paypal')url=`https://paypal.me/${t.paypal.handle}/${amt}`;
+  if(url)window.open(url,'_blank');
+}
+
+// ═══════ HELPERS ═══════
+function g(id){return document.getElementById(id);}
+function arrToObj(arr){const o={};arr.forEach((item,i)=>{o[item.id||i]=item;});return o;}
+function toast(m){const t=g('toastEl');t.textContent='✅ '+m;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2000);}
+function h(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ═══════ FORM VALIDATION ═══════
+['fName','fPhone','fSong','fAuthor'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('input',()=>{
+    const ok=['fName','fPhone','fSong','fAuthor'].every(i=>g(i).value.trim());
+    const b=g('submitBtn');
+    if(ok){b.style.background='linear-gradient(135deg,var(--pink),var(--orange))';b.style.color='#fff';b.style.cursor='pointer';b.style.boxShadow='0 4px 20px rgba(255,45,138,.2)';}
+    else{b.style.background='var(--border)';b.style.color='var(--dim)';b.style.cursor='not-allowed';b.style.boxShadow='none';}
+  });
+});
+var pinEl=document.getElementById('pinInput');if(pinEl)pinEl.addEventListener('keydown',function(e){if(e.key==='Enter')kjLoginCheck();});
+
+// ═══════ RENDER ═══════
+function render() {
+  const q=state.queue, cs=q.find(s=>s.status==='singing'), wc=q.filter(s=>s.status==='waiting').length;
+
+  // Nav
+  g('navName').textContent=state.bar.name;
+
+  // Views
+  const singerViews=['singerWelcome','singerForm','singerDone','singerTip'];
+  const kjViews=['kjLogin','kjDash'];
+  singerViews.forEach(v=>{const el=g(v);if(el)el.classList.toggle('hidden',state.mode!=='singer'||state.singerView!==v);});
+  g('kjLogin').classList.toggle('hidden',state.mode!=='kj'||state.kjAuth);
+  g('kjDash').classList.toggle('hidden',state.mode!=='kj'||!state.kjAuth);
+  g('singerFooter').classList.toggle('hidden',state.mode!=='singer');
+
+  // ── Singer Welcome ──
+  g('welcomeTitle').textContent='Welcome to '+state.bar.name;
+  g('welcomeTagline').textContent=state.bar.tagline;
+  g('waitCount').textContent=wc;
+  g('totalCount').textContent=q.length;
+
+  if(cs){g('nowSingingBanner').classList.remove('hidden');g('nowSingingName').textContent=cs.name;g('nowSingingInfo').textContent=cs.song+' — '+cs.author;}
+  else g('nowSingingBanner').classList.add('hidden');
+
+  g('welcomeTip').classList.toggle('hidden',!state.tips.enabled);
+  g('welcomeTipTitle').textContent=state.tips.headline||'Tip Your KJ';
+
+  // Events
+  let evH='';
+  if(state.events.length){
+    evH='<div style="margin-top:10px;background:rgba(255,45,138,.03);border:1px solid rgba(255,45,138,.1);border-radius:14px;padding:16px;text-align:left"><div style="font-size:12px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">🔥 Events</div>';
+    state.events.forEach(ev=>{evH+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;padding:7px 10px;background:${ev.color}08;border-radius:8px"><span style="font-weight:900;font-size:11px;color:${ev.color};min-width:28px;font-family:'Outfit'">${h(ev.day)}</span><div><div style="font-weight:700;font-size:13px">${h(ev.name)}</div><div style="font-size:11px;color:var(--dim)">${h(ev.detail)}</div></div></div>`;});
+    evH+='</div>';
+  }
+  g('eventsSection').innerHTML=evH;
+
+  // Offer
+  let ofH='';
+  if(state.offer.active){
+    ofH=`<div style="margin-top:14px;background:rgba(255,225,77,.05);border:1px dashed rgba(255,225,77,.27);border-radius:12px;padding:14px 18px;text-align:center"><div style="font-size:20px;margin-bottom:2px">${h(state.offer.emoji)}</div><div style="font-size:14px;font-weight:800;color:var(--yellow);font-family:'Outfit'">${h(state.offer.title)}</div><div style="font-size:13px;color:var(--dim);margin-top:4px">${h(state.offer.text)}</div></div>`;
+  }
+  g('offerSection').innerHTML=ofH;
+
+  // Rules
+  let ruH='';state.rules.forEach((r,i)=>{ruH+=`<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">${i+1}.</span><span>${h(r)}</span></div>`;});
+  g('policyContent').innerHTML=ruH;
+
+  // ── Singer Done ──
+  if(state.singerView==='singerDone'){
+    const pos=state.myId?q.findIndex(s=>s.id===state.myId):-1;
+    let posH='';
+    if(pos>=0){
+      const isSinging=q[pos]&&q[pos].status==='singing';
+      posH=`<div style="background:rgba(77,225,255,.06);border:1px solid rgba(77,225,255,.2);border-radius:14px;padding:18px;margin-bottom:16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--blue);font-weight:700;margin-bottom:3px">Your Position</div><div style="font-size:48px;font-weight:900;font-family:'Outfit'">${isSinging?'🎙️':'#'+(pos+1)}</div><div style="font-size:13px;color:var(--dim)">${isSinging?"You're up NOW!":pos===0?"You're next!":pos+' ahead of you'}</div></div>`;
+    } else if(state.myId){
+      posH=`<div style="background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.2);border-radius:14px;padding:18px;margin-bottom:16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--green);font-weight:700">✅ Complete!</div><div style="font-size:14px;color:var(--dim);margin-top:6px">Great job up there! 🎶</div></div>`;
+    }
+    g('positionCard').innerHTML=posH;
+    g('songSummary').innerHTML=`<div style="font-size:11px;color:var(--dim)">${h(g('fName').value)} · ${h(g('fPhone').value)}</div><div style="font-size:16px;font-weight:800;font-family:'Outfit';margin-top:3px">🎵 ${h(g('fSong').value)}</div><div style="font-size:13px;color:var(--yellow);margin-top:2px">by ${h(g('fAuthor').value)}</div>`;
+    g('tipFull').innerHTML=renderTipCard(false);
+  }
+
+  // ── Singer Tip Page ──
+  if(state.singerView==='singerTip') g('tipPageContent').innerHTML=renderTipCard(false);
+
+  // ── Footer ──
+  g('footerInfo').innerHTML=`📍 ${h(state.bar.address)}<br>📞 ${h(state.bar.phone)}<br>🕘 ${h(state.bar.hours)}`;
+  g('footerSocial').textContent=state.bar.social;
+  g('footerCopy').textContent='© 2026 '+state.bar.name;
+
+  // ── KJ Queue ──
+  if(state.kjAuth) renderKJ();
+}
+
+function renderTipCard(compact){
+  if(!state.tips.enabled)return'';
+  const t=state.tips,amt=state.selectedTip==='custom'?(parseFloat(state.customTip)||0):state.selectedTip;
+  let html=`<div style="background:linear-gradient(135deg,rgba(255,215,0,.05),rgba(255,107,53,.03));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:20px 18px;margin-bottom:20px;text-align:center"><div style="font-size:32px;margin-bottom:6px">💰</div><div style="font-family:'Outfit';font-size:18px;font-weight:800;color:var(--gold);margin-bottom:2px">${h(t.headline)}</div><p style="font-size:13px;color:var(--dim);margin:0 0 16px;line-height:1.5">${h(t.subtitle)}</p>`;
+
+  // Amounts
+  html+='<div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap">';
+  t.amounts.forEach(a=>{
+    const sel=state.selectedTip===a;
+    html+=`<button onclick="selectTip(${a})" style="padding:10px 0;width:60px;background:${sel?'linear-gradient(135deg,var(--gold),var(--orange))':'var(--input)'};border:1px solid ${sel?'var(--gold)':'var(--border)'};border-radius:10px;color:${sel?'#000':'var(--text)'};font-size:16px;font-weight:800;cursor:pointer;font-family:'Outfit';transition:all .2s;box-shadow:${sel?'0 4px 16px rgba(255,215,0,.2)':'none'}">$${a}</button>`;
+  });
+  if(t.customAmount){
+    const sel=state.selectedTip==='custom';
+    html+=`<button onclick="selectTip('custom')" style="padding:10px 0;width:60px;background:${sel?'linear-gradient(135deg,var(--gold),var(--orange))':'var(--input)'};border:1px solid ${sel?'var(--gold)':'var(--border)'};border-radius:10px;color:${sel?'#000':'var(--dim)'};font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Other</button>`;
+  }
+  html+='</div>';
+
+  // Custom input
+  if(state.selectedTip==='custom'){
+    html+=`<div style="margin:0 auto 12px;max-width:160px;position:relative"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gold);font-weight:800;font-size:18px">$</span><input class="s-input" type="number" placeholder="0" value="${h(state.customTip)}" min="1" oninput="setCustomTip(this.value)" style="padding-left:32px;font-size:20px;font-weight:800;text-align:center;font-family:'Outfit'"></div>`;
+  }
+
+  // Payment buttons
+  if(state.selectedTip!==null&&amt>0){
+    html+=`<div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:600">Send $${amt} via</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">`;
+    if(t.venmo.enabled)html+=`<button onclick="openTipLink('venmo')" style="padding:10px 18px;background:rgba(0,140,255,.09);border:1px solid rgba(0,140,255,.27);border-radius:10px;color:#008CFF;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💜 Venmo</button>`;
+    if(t.cashapp.enabled)html+=`<button onclick="openTipLink('cashapp')" style="padding:10px 18px;background:rgba(0,214,50,.09);border:1px solid rgba(0,214,50,.27);border-radius:10px;color:#00D632;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💚 Cash App</button>`;
+    if(t.paypal.enabled)html+=`<button onclick="openTipLink('paypal')" style="padding:10px 18px;background:rgba(0,112,186,.09);border:1px solid rgba(0,112,186,.27);border-radius:10px;color:#0070BA;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💙 PayPal</button>`;
+    html+='</div>';
+  } else if(state.selectedTip===null){
+    html+='<div style="font-size:12px;color:var(--dim);margin-top:4px">Select an amount above ☝️</div>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function renderKJ(){
+  const q=state.queue,cs=q.find(s=>s.status==='singing'),wc=q.filter(s=>s.status==='waiting').length;
+  const qEl=g('kjQueue'),mEl=g('kjManage');
+  qEl.classList.toggle('hidden',state.kjTab!=='queue');
+  mEl.classList.toggle('hidden',state.kjTab!=='manage');
+
+  if(state.kjTab==='queue'){
+    let html=`<div style="display:flex;gap:8px;margin-bottom:14px">${[{n:q.length,l:'Total',c:'var(--blue)'},{n:wc,l:'Waiting',c:'var(--yellow)'},{n:q.filter(s=>s.status==='singing').length,l:'On Stage',c:'var(--green)'}].map(({n,l,c})=>`<div style="flex:1;background:${c.replace(')',',0.05)')};border:1px solid ${c.replace(')',',0.13)')};border-radius:10px;padding:10px 6px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:'Outfit';color:${c}">${n}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">${l}</div></div>`).join('')}</div>`;
+
+    if(cs){html+=`<div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.27);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--singing);font-weight:700">🎙️ Now Singing</div><div style="font-size:16px;font-weight:800;font-family:'Outfit';margin-top:2px">${h(cs.name)}</div><div style="font-size:13px;color:var(--dim)">${h(cs.song)} — ${h(cs.author)}</div><div style="font-size:11px;color:var(--dim);margin-top:1px">📱 ${h(cs.phone)}</div></div><button onclick="removeSinger('${cs.id}')" style="padding:8px 14px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.27);border-radius:8px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Done ✓</button></div>`;}
+
+    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0">Queue</h3>${q.length?`<button onclick="clearQueue()" style="background:rgba(255,68,102,.09);border:1px solid rgba(255,68,102,.2);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit">Clear All</button>`:''}</div>`;
+
+    if(!q.length){html+=`<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">🦗</div><div style="color:var(--dim);font-size:13px">No one in line yet</div></div>`;}
+    else{q.forEach((s,i)=>{
+      html+=`<div style="background:${s.status==='singing'?'rgba(255,107,53,.06)':'var(--card)'};border:1px solid ${s.status==='singing'?'rgba(255,107,53,.27)':'var(--border)'};border-radius:12px;padding:12px 14px;margin-bottom:7px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-family:'Outfit';font-weight:900;font-size:16px;color:${s.status==='singing'?'var(--singing)':'var(--dim)'};min-width:26px">${s.status==='singing'?'🎙️':'#'+(i+1)}</span><div style="flex:1"><div style="font-size:15px;font-weight:700;font-family:'Outfit'">${h(s.name)}</div><div style="font-size:11px;color:var(--dim)">📱 ${h(s.phone)} · ⏰ ${h(s.time)}</div></div></div><div style="margin-left:34px;margin-bottom:8px"><div style="font-size:14px;font-weight:600">🎵 ${h(s.song)}</div><div style="font-size:12px;color:var(--yellow)">by ${h(s.author)}</div></div><div style="display:flex;gap:5px;margin-left:34px;flex-wrap:wrap">${s.status!=='singing'?`<button onclick="nowSinging('${s.id}')" style="padding:5px 10px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:7px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🎙️ Sing</button>`:''}<button onclick="moveQ(${i},-1)" ${i===0?'disabled':''} style="padding:5px 8px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:7px;color:${i===0?'var(--dim)':'var(--blue)'};font-size:11px;cursor:${i===0?'default':'pointer'};font-family:inherit;opacity:${i===0?.4:1}">↑</button><button onclick="moveQ(${i},1)" ${i>=q.length-1?'disabled':''} style="padding:5px 8px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:7px;color:${i>=q.length-1?'var(--dim)':'var(--blue)'};font-size:11px;cursor:${i>=q.length-1?'default':'pointer'};font-family:inherit;opacity:${i>=q.length-1?.4:1}">↓</button><button onclick="removeSinger('${s.id}')" style="padding:5px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-family:inherit;margin-left:auto">✕</button></div></div>`;
+    });}
+    qEl.innerHTML=html;
+  }
+
+  if(state.kjTab==='manage'){
+    const ms=state.mgmtSection;
+    let html=`<div style="display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap">${[['events','🗓 Events'],['offer','🍹 Offer'],['tips','💰 Tips'],['rules','📜 Rules'],['customers','📇 Customers'],['barinfo','🏠 Bar Info']].map(([s,l])=>`<button onclick="state.mgmtSection='${s}';render()" class="pill ${ms===s?'active':''}">${l}</button>`).join('')}</div>`;
+
+    if(ms==='events'){
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0">🗓 Events</h3><button onclick="addNewEvent()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">+ Add New</button></div>';
+
+      if(!state.events.length){
+        html+='<div style="text-align:center;padding:30px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:32px;margin-bottom:6px">🗓</div><div style="color:var(--dim);font-size:13px">No events yet — tap + Add New above</div></div>';
+      }
+
+      state.events.forEach((ev,i)=>{
+        html+=`<div class="s-card" style="padding:12px 14px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><span style="font-weight:900;font-size:12px;color:${ev.color};min-width:32px;font-family:'Outfit';background:${ev.color}15;padding:4px 8px;border-radius:6px;text-align:center">${h(ev.day)}</span><div><div style="font-weight:700;font-size:14px">${h(ev.name)}</div><div style="font-size:12px;color:var(--dim)">${h(ev.detail)}</div></div></div><div style="display:flex;gap:4px"><button onclick="moveEvent(${i},-1)" ${i===0?'disabled':''} style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:${i===0?'var(--dim)':'var(--blue)'};font-size:10px;cursor:${i===0?'default':'pointer'};font-family:inherit;opacity:${i===0?.4:1}">↑</button><button onclick="moveEvent(${i},1)" ${i>=state.events.length-1?'disabled':''} style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:${i>=state.events.length-1?'var(--dim)':'var(--blue)'};font-size:10px;cursor:${i>=state.events.length-1?'default':'pointer'};font-family:inherit;opacity:${i>=state.events.length-1?.4:1}">↓</button><button onclick="editEvent('${ev.id}')" style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:var(--blue);font-size:10px;cursor:pointer;font-family:inherit">✏️</button><button onclick="deleteEvent('${ev.id}')" style="padding:4px 7px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div></div></div>`;
+      });
+
+      // Inline editor form
+      if(state.editingEvent){
+        const ev=state.editingEvent;
+        const days=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+        const colors=[{l:'Green',v:'#39ff73'},{l:'Pink',v:'#ff2d8a'},{l:'Yellow',v:'#ffe14d'},{l:'Blue',v:'#4de1ff'},{l:'Orange',v:'#ff6b35'},{l:'Purple',v:'#b44dff'}];
+        html+=`<div class="s-card" style="border:1px solid rgba(180,77,255,.3);margin-top:12px"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;color:var(--purple);margin:0 0 14px">${ev.id?'✏️ Edit Event':'✨ New Event'}</h4>`;
+        html+=`<div style="display:flex;gap:8px;margin-bottom:10px"><div style="flex:1"><label class="s-label">Day</label><select class="s-input" style="padding:10px 14px" onchange="state.editingEvent.day=this.value">${days.map(d=>`<option value="${d}" ${ev.day===d?'selected':''}>${d}</option>`).join('')}</select></div><div style="flex:1"><label class="s-label">Color</label><select class="s-input" style="padding:10px 14px" onchange="state.editingEvent.color=this.value">${colors.map(c=>`<option value="${c.v}" ${ev.color===c.v?'selected':''} style="color:${c.v}">${c.l}</option>`).join('')}</select></div></div>`;
+        html+=`<div style="margin-bottom:10px"><label class="s-label">Event Name</label><input class="s-input" value="${h(ev.name)}" oninput="state.editingEvent.name=this.value" placeholder="e.g. Throwback Thursday"></div>`;
+        html+=`<div style="margin-bottom:14px"><label class="s-label">Details / Promo</label><input class="s-input" value="${h(ev.detail)}" oninput="state.editingEvent.detail=this.value" placeholder="e.g. $2 tacos, half-off drinks"></div>`;
+        // Preview
+        html+=`<div style="margin-bottom:14px;padding:10px 12px;background:var(--input);border-radius:8px;border:1px solid var(--border)"><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Preview</div><div style="display:flex;align-items:center;gap:10px"><span style="font-weight:900;font-size:12px;color:${ev.color};min-width:32px;background:${ev.color}15;padding:4px 8px;border-radius:6px;text-align:center;font-family:'Outfit'">${h(ev.day)}</span><div><div style="font-weight:700;font-size:14px">${h(ev.name)||'Event Name'}</div><div style="font-size:12px;color:var(--dim)">${h(ev.detail)||'Details here'}</div></div></div></div>`;
+        html+=`<div style="display:flex;gap:8px"><button onclick="saveEventEdit()" style="padding:10px 18px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Event</button><button onclick="cancelEventEdit()" style="padding:10px 18px;background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button></div></div>`;
+      }
+    }
+    else if(ms==='offer'){
+      const o=state.offer;
+      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--yellow)">🍹 Special Offer</h3><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="s-label" style="margin:0">Active</span><button onclick="state.offer.active=!state.offer.active;saveOffer()" class="toggle ${o.active?'on':'off'}"><div class="dot"></div></button></div><div style="margin-bottom:10px"><label class="s-label">Emoji</label><input class="s-input" value="${h(o.emoji)}" oninput="state.offer.emoji=this.value" style="width:70px" maxlength="4"></div><div style="margin-bottom:10px"><label class="s-label">Title</label><input class="s-input" value="${h(o.title)}" oninput="state.offer.title=this.value"></div><div style="margin-bottom:14px"><label class="s-label">Description</label><textarea class="s-input" oninput="state.offer.text=this.value">${h(o.text)}</textarea></div><button onclick="saveOffer()" style="padding:8px 14px;background:linear-gradient(135deg,var(--yellow),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Offer</button></div>`;
+    }
+    else if(ms==='tips'){
+      const t=state.tips;
+      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--gold)">💰 Tip Settings</h3><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:10px 14px;background:rgba(255,215,0,.04);border-radius:10px;border:1px solid rgba(255,215,0,.13)"><div><div style="font-size:14px;font-weight:700">Enable Tips</div><div style="font-size:11px;color:var(--dim)">Show tip option to singers</div></div><button onclick="state.tips.enabled=!state.tips.enabled;saveTips()" class="toggle ${t.enabled?'on':'off'}"><div class="dot"></div></button></div><div style="margin-bottom:10px"><label class="s-label">Headline</label><input class="s-input" value="${h(t.headline)}" oninput="state.tips.headline=this.value"></div><div style="margin-bottom:14px"><label class="s-label">Subtitle</label><textarea class="s-input" oninput="state.tips.subtitle=this.value">${h(t.subtitle)}</textarea></div><label class="s-label" style="margin-bottom:8px">Preset Amounts</label><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${t.amounts.map((a,i)=>`<div style="display:flex;align-items:center;gap:4px"><span style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--gold);font-weight:800;font-family:'Outfit';font-size:15px">$${a}</span><button onclick="state.tips.amounts.splice(${i},1);saveTips()" style="background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;padding:4px 6px;cursor:pointer;font-family:inherit">✕</button></div>`).join('')}<button onclick="addTipAmount()" style="padding:6px 12px;background:rgba(57,255,115,.07);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">+ Add</button></div></div>`;
+
+      // Payment platforms
+      html+=`<div class="s-card"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;margin:0 0 14px;color:var(--blue)">Payment Platforms</h4>`;
+      [{key:'venmo',label:'Venmo',icon:'💜',color:'#008CFF',prefix:'venmo.com/'},{key:'cashapp',label:'Cash App',icon:'💚',color:'#00D632',prefix:'cash.app/'},{key:'paypal',label:'PayPal',icon:'💙',color:'#0070BA',prefix:'paypal.me/'}].forEach(p=>{
+        const en=t[p.key].enabled;
+        html+=`<div style="padding:12px 14px;background:${p.color}08;border:1px solid ${p.color}1a;border-radius:10px;margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between;${en?'margin-bottom:10px':''}"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">${p.icon}</span><span style="font-size:14px;font-weight:700;color:${p.color}">${p.label}</span></div><button onclick="state.tips.${p.key}.enabled=!state.tips.${p.key}.enabled;saveTips()" class="toggle ${en?'on':'off'}"><div class="dot"></div></button></div>${en?`<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:var(--dim);white-space:nowrap">${p.prefix}</span><input class="s-input" value="${h(t[p.key].handle.replace(/^\$/,''))}" oninput="state.tips.${p.key}.handle=${p.key==='cashapp'?"'$'+":"''+"}this.value" style="font-size:14px;padding:8px 12px"></div>`:''}</div>`;
+      });
+      html+=`<button onclick="saveTips()" style="width:100%;margin-top:6px;padding:14px 16px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit';text-transform:uppercase">Save Tip Settings 💰</button></div>`;
+    }
+    else if(ms==='rules'){
+      html+='<h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 10px">📜 Rules</h3>';
+      state.rules.forEach((r,i)=>{
+        html+=`<div class="s-card" style="display:flex;align-items:center;gap:8px;padding:10px 14px;margin-bottom:6px"><span style="color:var(--yellow);font-weight:700;min-width:18px;font-size:13px">${i+1}.</span><span style="flex:1;font-size:13px;color:var(--dim)">${h(r)}</span><button onclick="moveRule(${i},-1)" ${i===0?'disabled':''} style="padding:4px 6px;background:transparent;border:1px solid var(--border);border-radius:5px;color:${i===0?'var(--dim)':'var(--blue)'};font-size:10px;cursor:${i===0?'default':'pointer'};font-family:inherit;opacity:${i===0?.4:1}">↑</button><button onclick="deleteRule(${i})" style="padding:4px 6px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:5px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div>`;
+      });
+      html+=`<div style="display:flex;gap:8px;margin-top:10px"><input class="s-input" id="newRule" placeholder="Add a new rule..." style="flex:1" onkeydown="if(event.key==='Enter')addNewRule()"><button onclick="addNewRule()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">+ Add</button></div>`;
+    }
+    else if(ms==='customers'){
+      const custs=state.customers;
+      const search=state.customerSearch.toLowerCase();
+      const filtered=search?custs.filter(c=>c.name.toLowerCase().includes(search)||c.phone.includes(search)):custs;
+      const sorted=[...filtered].sort((a,b)=>(b.visits||1)-(a.visits||1));
+
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0">📇 Customers (${custs.length})</h3><button onclick="exportCustomersCSV()" style="padding:6px 12px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV</button></div>`;
+
+      html+=`<div style="margin-bottom:12px"><input class="s-input" placeholder="🔍 Search by name or phone..." value="${h(state.customerSearch)}" oninput="state.customerSearch=this.value;render()"></div>`;
+
+      if(!sorted.length){
+        html+=`<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">📇</div><div style="color:var(--dim);font-size:13px">${search?'No customers match your search':'No customers yet — they appear when singers submit songs'}</div></div>`;
+      } else {
+        sorted.forEach(c=>{
+          const songCount=c.songs?c.songs.length:1;
+          html+=`<div class="s-card" style="padding:14px 16px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="font-size:16px;font-weight:700;font-family:'Outfit'">${h(c.name)}</div><div style="font-size:13px;color:var(--dim);margin-top:2px">📱 ${h(c.phone)}</div><div style="display:flex;gap:12px;margin-top:8px"><div style="font-size:11px;color:var(--blue)"><span style="font-weight:800;font-size:14px">${c.visits||1}</span> visit${(c.visits||1)>1?'s':''}</div><div style="font-size:11px;color:var(--yellow)"><span style="font-weight:800;font-size:14px">${songCount}</span> song${songCount>1?'s':''}</div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">First: ${h(c.firstVisit||'—')} · Last: ${h(c.lastVisit||'—')}</div></div><button onclick="deleteCustomer('${c.id}')" style="padding:4px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div>`;
+          if(c.songs&&c.songs.length){
+            html+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Song History</div>`;
+            c.songs.slice(-5).reverse().forEach(s=>{
+              html+=`<div style="font-size:12px;color:var(--dim);margin-bottom:3px">🎵 <span style="color:var(--text)">${h(s.song)}</span> — ${h(s.author)} <span style="opacity:.5">(${h(s.date)})</span></div>`;
+            });
+            if(c.songs.length>5) html+=`<div style="font-size:11px;color:var(--dim);opacity:.5">...and ${c.songs.length-5} more</div>`;
+            html+=`</div>`;
+          }
+          html+=`</div>`;
+        });
+      }
+    }
+    else if(ms==='barinfo'){
+      const b=state.bar;
+      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--blue)">🏠 Bar Information</h3>`;
+      [{k:'name',l:'Bar Name'},{k:'tagline',l:'Tagline'},{k:'address',l:'Address'},{k:'phone',l:'Phone'},{k:'hours',l:'Hours'},{k:'social',l:'Social Handle'},{k:'kjPin',l:'🔒 KJ PIN'}].forEach(({k,l})=>{
+        html+=`<div style="margin-bottom:10px"><label class="s-label">${l}</label><input class="s-input" value="${h(b[k])}" oninput="state.bar.${k}=this.value" type="${k==='kjPin'?'password':'text'}"></div>`;
+      });
+      html+=`<button onclick="saveBar()" style="padding:8px 14px;background:linear-gradient(135deg,var(--blue),var(--green));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Info</button></div>`;
+    }
+    mEl.innerHTML=html;
+  }
+}
+
+// ── Event/Rule helpers ──
+function addNewEvent(){state.editingEvent={id:'',day:'FRI',name:'',detail:'',color:'#39ff73'};render();}
+function editEvent(id){const ev=state.events.find(e=>e.id===id);if(!ev)return;state.editingEvent={...ev};render();}
+function cancelEventEdit(){state.editingEvent=null;render();}
+function saveEventEdit(){
+  const ev=state.editingEvent;if(!ev||!ev.name)return;
+  if(!ev.id){ev.id=Date.now().toString();state.events.push(ev);}
+  else{const i=state.events.findIndex(e=>e.id===ev.id);if(i>=0)state.events[i]=ev;}
+  state.editingEvent=null;saveEvents();
+}
+function moveEvent(i,dir){const j=i+dir;if(j<0||j>=state.events.length)return;[state.events[i],state.events[j]]=[state.events[j],state.events[i]];saveEvents();}
+function addNewRule(){const el=g('newRule');if(!el||!el.value.trim())return;state.rules.push(el.value.trim());el.value='';saveRules();}
+function addTipAmount(){const v=prompt('Enter tip amount ($):');if(v&&!isNaN(v)&&Number(v)>0){state.tips.amounts.push(Number(v));saveTips();}}
+
+// ═══════ CUSTOMER ACTIONS ═══════
+function deleteCustomer(id){state.customers=state.customers.filter(c=>c.id!==id);fbSet('customers',arrToObj(state.customers));toast('Customer removed');}
+
+function exportCustomersCSV(){
+  if(!state.customers.length){toast('No customers to export');return;}
+  let csv='Name,Phone,Visits,First Visit,Last Visit,Songs\n';
+  state.customers.forEach(c=>{
+    const songs=c.songs?c.songs.map(s=>s.song+' by '+s.author).join(' | '):'';
+    csv+=`"${(c.name||'').replace(/"/g,'""')}","${c.phone}",${c.visits||1},"${c.firstVisit||''}","${c.lastVisit||''}","${songs.replace(/"/g,'""')}"\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='pepes-customers-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV downloaded!');
+}
+
+// ── Init ──
+try { render(); } catch(e) {}
+</script>
+</body>
+</html>
