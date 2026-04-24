@@ -178,12 +178,27 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- ═══════════ KJ: LOGIN ═══════════ -->
-  <div id="kjLogin" class="hidden sl" style="text-align:center;padding-top:50px">
-    <div style="font-size:44px;margin-bottom:10px">🎧</div>
-    <h2 style="font-family:'Outfit';font-size:20px;font-weight:800;margin:0 0 5px">KJ Dashboard</h2>
-    <p style="color:var(--dim);font-size:13px;margin:0 0 24px">Enter PIN to access</p>
+  <div id="kjLogin" class="hidden sl" style="text-align:center;padding-top:40px">
+    <div style="font-size:44px;margin-bottom:10px">🔐</div>
+    <h2 style="font-family:'Outfit';font-size:20px;font-weight:800;margin:0 0 5px">Staff Login</h2>
+    <p style="color:var(--dim);font-size:13px;margin:0 0 20px">Select your role and enter PIN</p>
+
+    <!-- Role selector -->
+    <div style="display:flex;gap:8px;max-width:280px;margin:0 auto 20px">
+      <button id="roleKJ" onclick="selectRole('kj')" style="flex:1;padding:14px 10px;background:rgba(77,225,255,.1);border:2px solid var(--blue);border-radius:12px;cursor:pointer;text-align:center;font-family:inherit;color:var(--text)">
+        <div style="font-size:24px;margin-bottom:4px">🎧</div>
+        <div style="font-size:13px;font-weight:700;color:var(--blue)">KJ</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">Queue only</div>
+      </button>
+      <button id="roleAdmin" onclick="selectRole('admin')" style="flex:1;padding:14px 10px;background:transparent;border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;font-family:inherit;color:var(--text)">
+        <div style="font-size:24px;margin-bottom:4px">🔑</div>
+        <div style="font-size:13px;font-weight:700;color:var(--purple)">Admin</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:2px">Full access</div>
+      </button>
+    </div>
+
     <div style="max-width:240px;margin:0 auto">
-      <input class="s-input" id="pinInput" type="password" placeholder="PIN" maxlength="6" style="font-size:22px;text-align:center;letter-spacing:12px">
+      <input class="s-input" id="pinInput" type="password" placeholder="Enter PIN" maxlength="6" style="font-size:22px;text-align:center;letter-spacing:12px">
       <div id="pinError" class="hidden" style="color:var(--red);font-size:12px;margin-top:6px">Wrong PIN</div>
       <button onclick="kjLoginCheck()" style="width:100%;margin-top:14px;padding:16px;background:linear-gradient(135deg,var(--blue),var(--green));color:#000;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Outfit';letter-spacing:1px">Unlock 🔓</button>
     </div>
@@ -191,13 +206,19 @@ input[type=number]{-moz-appearance:textfield}
 
   <!-- ═══════════ KJ: DASHBOARD ═══════════ -->
   <div id="kjDash" class="hidden sl">
-    <div style="display:flex;gap:0;margin-bottom:14px;background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden">
+    <!-- Role indicator -->
+    <div id="roleIndicator" style="text-align:center;margin-bottom:10px;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;display:inline-block"></div>
+
+    <div id="kjTabBar" style="display:flex;gap:0;margin-bottom:14px;background:var(--card);border-radius:10px;border:1px solid var(--border);overflow:hidden">
       <button class="nav-tab active" style="flex:1;padding:10px 8px;font-size:13px;font-weight:700" onclick="switchKjTab('queue')">🎤 Queue</button>
-      <button class="nav-tab" style="flex:1;padding:10px 8px;font-size:13px;font-weight:700" onclick="switchKjTab('manage')">⚙️ Manage</button>
+      <button id="manageTabBtn" class="nav-tab" style="flex:1;padding:10px 8px;font-size:13px;font-weight:700" onclick="switchKjTab('manage')">⚙️ Manage</button>
     </div>
     <div id="kjQueue"></div>
     <div id="kjManage" class="hidden"></div>
-    <div style="text-align:center;padding-top:14px"><button onclick="kjLock()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:9px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔒 Lock</button></div>
+    <div style="text-align:center;padding-top:14px;display:flex;gap:8px;justify-content:center">
+      <button onclick="openStageDisplay()" style="background:linear-gradient(135deg,var(--pink),var(--orange));border:none;color:#fff;padding:9px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit';letter-spacing:.5px">📺 Stage Display</button>
+      <button onclick="kjLock()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:9px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔒 Lock</button>
+    </div>
   </div>
 
   <!-- FOOTER (singer views) -->
@@ -211,6 +232,19 @@ input[type=number]{-moz-appearance:textfield}
 </div>
 
 <div id="toastEl" class="toast hidden"></div>
+
+<!-- ═══════════ STAGE DISPLAY (Full Screen) ═══════════ -->
+<div id="stageDisplay" class="hidden" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#050508;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;overflow:hidden">
+  <!-- Background effects -->
+  <div style="position:absolute;top:-200px;left:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(255,45,138,.12) 0%,transparent 70%);border-radius:50%;pointer-events:none"></div>
+  <div style="position:absolute;bottom:-200px;right:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(77,225,255,.08) 0%,transparent 70%);border-radius:50%;pointer-events:none"></div>
+
+  <!-- Exit button -->
+  <button onclick="closeStageDisplay()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:none;color:#fff;width:40px;height:40px;border-radius:20px;font-size:18px;cursor:pointer;z-index:201">✕</button>
+
+  <!-- Content -->
+  <div id="stageContent" style="position:relative;z-index:1;text-align:center;width:100%;max-width:600px"></div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -262,6 +296,12 @@ window.onerror = function(msg, url, line) {
   return false;
 };
 
+// ── Kiosk mode detection ──
+if (window.location.search.indexOf('kiosk=1') > -1) {
+  state.kioskMode = true;
+}
+var kioskTimer = null;
+
 // ═══════ STATE ═══════
 let state = {
   mode: 'singer',
@@ -269,7 +309,7 @@ let state = {
   queue: [],
   myId: null,
   kjAuth: false,
-  bar: {name:"PEPE'S",tagline:"Karaoke Bar",address:"123 Main Street, Portland, OR 97201",phone:"(555) 123-4567",hours:"Tues–Sat · 7 PM – 2 AM",social:"@pepeskaraoke",kjPin:"1234"},
+  bar: {name:"PEPE'S",tagline:"Karaoke Bar",address:"123 Main Street, Portland, OR 97201",phone:"(555) 123-4567",hours:"Tues–Sat · 7 PM – 2 AM",social:"@pepeskaraoke",kjPin:"1234",adminPin:"9999"},
   events: [
     {id:"1",day:"TUE",name:"Open Mic Night",detail:"$3 wells all night",color:"#39ff73"},
     {id:"2",day:"WED",name:"Ladies Night Karaoke",detail:"½ off margaritas",color:"#ff2d8a"},
@@ -283,7 +323,7 @@ let state = {
   selectedTip:null,customTip:"",
   kjTab:'queue',mgmtSection:'events',
   customers:[],customerSearch:"",editingEvent:null,
-  returningCustomer:null,
+  returningCustomer:null,kioskMode:false,kjRole:null,
 };
 
 // ═══════ RETURNING SINGER FUNCTIONS ═══════
@@ -361,6 +401,7 @@ if (isConfigured && db) {
         else if (key === 'customers') state.customers = v ? Object.values(v) : [];
         else if (v) state[key] = v;
         render();
+        if(stageInterval && (key==='queue'||key==='reviews'||key==='bar'))try{updateStageDisplay();}catch(e){}
       });
     });
   } catch(e) {}
@@ -408,16 +449,54 @@ function submitSong() {
   }
   state.selectedTip=null;state.customTip="";
   showView('singerDone');
+  // Kiosk mode: auto-reset after 30 seconds
+  if(state.kioskMode){
+    if(kioskTimer)clearInterval(kioskTimer);
+    state.kioskCountdown=30;
+    kioskTimer=setInterval(function(){
+      state.kioskCountdown--;
+      var cdEl=document.getElementById('kioskCountdown');
+      if(cdEl)cdEl.textContent=state.kioskCountdown;
+      if(state.kioskCountdown<=0){
+        clearInterval(kioskTimer);kioskTimer=null;
+        resetSinger();
+      }
+    },1000);
+  }
 }
 
-function resetSinger(){state.myId=null;state.returningCustomer=null;g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';state.selectedTip=null;state.customTip="";g('returningBanner').classList.add('hidden');g('phoneField').classList.remove('hidden');g('customerMatches').classList.add('hidden');showView('singerWelcome');}
+function resetSinger(){state.myId=null;state.returningCustomer=null;g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';state.selectedTip=null;state.customTip="";g('returningBanner').classList.add('hidden');g('phoneField').classList.remove('hidden');g('customerMatches').classList.add('hidden');if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}showView('singerWelcome');}
 
 // ═══════ KJ ACTIONS ═══════
 function kjLoginCheck(){
-  if(g('pinInput').value===state.bar.kjPin){state.kjAuth=true;g('pinError').classList.add('hidden');render();}
-  else{g('pinError').classList.remove('hidden');}
+  var pin=g('pinInput').value;
+  var role=state.kjRole||'kj';
+  var correctPin=role==='admin'?(state.bar.adminPin||'9999'):(state.bar.kjPin||'1234');
+  if(pin===correctPin){
+    state.kjAuth=true;
+    g('pinError').classList.add('hidden');
+    render();
+  } else {
+    g('pinError').classList.remove('hidden');
+  }
 }
-function kjLock(){state.kjAuth=false;g('pinInput').value='';render();}
+
+function selectRole(role){
+  state.kjRole=role;
+  g('pinInput').value='';
+  g('pinError').classList.add('hidden');
+  var kjBtn=g('roleKJ'),admBtn=g('roleAdmin');
+  if(role==='kj'){
+    kjBtn.style.background='rgba(77,225,255,.1)';kjBtn.style.borderColor='#4de1ff';
+    admBtn.style.background='transparent';admBtn.style.borderColor='#262640';
+  } else {
+    admBtn.style.background='rgba(180,77,255,.1)';admBtn.style.borderColor='#b44dff';
+    kjBtn.style.background='transparent';kjBtn.style.borderColor='#262640';
+  }
+  g('pinInput').focus();
+}
+
+function kjLock(){state.kjAuth=false;state.kjRole=null;g('pinInput').value='';render();}
 function nowSinging(id){state.queue=state.queue.map(s=>({...s,status:s.id===id?'singing':(s.status==='singing'?'waiting':s.status)}));fbSet('queue',arrToObj(state.queue));}
 function removeSinger(id){state.queue=state.queue.filter(s=>s.id!==id);fbSet('queue',arrToObj(state.queue));toast('Removed');}
 function moveQ(i,dir){const j=i+dir;if(j<0||j>=state.queue.length)return;const q=[...state.queue];[q[i],q[j]]=[q[j],q[i]];state.queue=q;fbSet('queue',arrToObj(state.queue));}
@@ -425,10 +504,69 @@ function clearQueue(){state.queue=[];fbSet('queue',null);toast('Queue cleared');
 
 // ═══════ MGMT ACTIONS ═══════
 function saveBar(){fbSet('bar',state.bar);toast('Bar info saved');}
+function copyKioskUrl(){
+  var url=window.location.origin+window.location.pathname+'?kiosk=1';
+  if(navigator.clipboard){navigator.clipboard.writeText(url).then(function(){toast('Kiosk link copied!');});}
+  else{var ta=document.createElement('textarea');ta.value=url;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('Kiosk link copied!');}
+}
 function saveEvents(){fbSet('events',state.events);toast('Events saved');}
 function saveOffer(){fbSet('offer',state.offer);toast('Offer saved');}
 function saveRules(){fbSet('rules',state.rules);toast('Rules saved');}
 function saveReviews(){fbSet('reviews',state.reviews);toast('Review links saved');}
+
+function printReviewQR(){
+  var r=state.reviews;
+  var platforms=[];
+  if(r.google&&r.google.enabled&&r.google.url)platforms.push({label:'Google',url:r.google.url,icon:'⭐',color:'#4285F4'});
+  if(r.yelp&&r.yelp.enabled&&r.yelp.url)platforms.push({label:'Yelp',url:r.yelp.url,icon:'🔴',color:'#FF1A1A'});
+  if(r.facebook&&r.facebook.enabled&&r.facebook.url)platforms.push({label:'Facebook',url:r.facebook.url,icon:'👍',color:'#1877F2'});
+
+  if(!platforms.length){toast('Add review links first!');return;}
+
+  var barName=state.bar.name||"PEPE'S";
+  var printHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Review QR Codes</title>';
+  printHtml+='<style>body{font-family:Arial,sans-serif;text-align:center;padding:40px 20px;background:#fff;color:#000}';
+  printHtml+='.card{display:inline-block;border:2px solid #ddd;border-radius:16px;padding:30px 24px;margin:16px;text-align:center;page-break-inside:avoid;max-width:320px;vertical-align:top}';
+  printHtml+='.card img{margin:16px 0}';
+  printHtml+='.bar-name{font-size:28px;font-weight:900;margin-bottom:4px}';
+  printHtml+='.tagline{font-size:14px;color:#666;margin-bottom:30px}';
+  printHtml+='.platform{font-size:20px;font-weight:800;margin-bottom:4px}';
+  printHtml+='.hint{font-size:12px;color:#888;margin-top:8px}';
+  printHtml+='.footer{margin-top:40px;font-size:11px;color:#aaa}';
+  printHtml+='@media print{body{padding:20px}.card{border:2px solid #ccc}}</style></head><body>';
+
+  printHtml+='<div style="font-size:36px;margin-bottom:4px">🌶️🎤</div>';
+  printHtml+='<div class="bar-name">'+barName+'</div>';
+  printHtml+='<div class="tagline">Leave us a review! ⭐⭐⭐⭐⭐</div>';
+
+  platforms.forEach(function(p){
+    var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(p.url);
+    printHtml+='<div class="card">';
+    printHtml+='<div style="font-size:32px;margin-bottom:4px">'+p.icon+'</div>';
+    printHtml+='<div class="platform" style="color:'+p.color+'">Review us on '+p.label+'</div>';
+    printHtml+='<img src="'+qrUrl+'" width="200" height="200" alt="QR Code">';
+    printHtml+='<div class="hint">Scan with your phone camera</div>';
+    printHtml+='</div>';
+  });
+
+  // Also add QR for the waitlist app itself
+  var appUrl=window.location.href;
+  var appQr='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(appUrl);
+  printHtml+='<div class="card">';
+  printHtml+='<div style="font-size:32px;margin-bottom:4px">🎤</div>';
+  printHtml+='<div class="platform" style="color:#ff2d8a">Join the Karaoke Waitlist</div>';
+  printHtml+='<img src="'+appQr+'" width="200" height="200" alt="QR Code">';
+  printHtml+='<div class="hint">Scan to sign up for your song</div>';
+  printHtml+='</div>';
+
+  printHtml+='<div class="footer">'+barName+' · '+(state.bar.address||'')+'</div>';
+  printHtml+='</body></html>';
+
+  var printWin=window.open('','_blank');
+  printWin.document.write(printHtml);
+  printWin.document.close();
+  setTimeout(function(){printWin.print();},1000);
+}
 function saveTips(){fbSet('tips',state.tips);toast('Tips saved');}
 function deleteEvent(id){state.events=state.events.filter(e=>e.id!==id);saveEvents();}
 function deleteRule(i){state.rules.splice(i,1);saveRules();}
@@ -471,6 +609,18 @@ function render() {
 
   // Nav
   g('navName').textContent=state.bar.name;
+
+  // Hide KJ tab in kiosk mode
+  var kjTabBtn=document.querySelectorAll('.nav-tabs .nav-tab')[1];
+  if(kjTabBtn && state.kioskMode){kjTabBtn.style.display='none';}
+  if(state.kioskMode){state.mode='singer';} // force singer mode
+
+  // In kiosk mode, swap welcome tip for QR version
+  var welcomeTipEl=g('welcomeTip');
+  if(welcomeTipEl && state.kioskMode){
+    welcomeTipEl.innerHTML=renderKioskTipQR(true);
+    welcomeTipEl.classList.remove('hidden');
+  }
 
   // Views
   const singerViews=['singerWelcome','singerForm','singerDone','singerTip'];
@@ -525,8 +675,36 @@ function render() {
     }
     g('positionCard').innerHTML=posH;
     g('songSummary').innerHTML=`<div style="font-size:11px;color:var(--dim)">${h(g('fName').value)} · ${h(g('fPhone').value)}</div><div style="font-size:16px;font-weight:800;font-family:'Outfit';margin-top:3px">🎵 ${h(g('fSong').value)}</div><div style="font-size:13px;color:var(--yellow);margin-top:2px">by ${h(g('fAuthor').value)}</div>`;
-    g('tipFull').innerHTML=renderTipCard(false);
-    g('reviewDone').innerHTML=renderReviewCard(false);
+    g('tipFull').innerHTML=state.kioskMode?renderKioskTipQR():renderTipCard(false);
+
+    // Kiosk mode: show review QR + countdown
+    var kioskReviewH='';
+    if(state.kioskMode){
+      var r=state.reviews||{};
+      var reviewUrl='';
+      if(r.google&&r.google.enabled&&r.google.url)reviewUrl=r.google.url;
+      else if(r.yelp&&r.yelp.enabled&&r.yelp.url)reviewUrl=r.yelp.url;
+      else if(r.facebook&&r.facebook.enabled&&r.facebook.url)reviewUrl=r.facebook.url;
+
+      if(reviewUrl){
+        var qrSrc='https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=111120&color=ffffff&data='+encodeURIComponent(reviewUrl);
+        kioskReviewH+='<div style="background:linear-gradient(135deg,rgba(66,133,244,.08),rgba(52,168,83,.05));border:1px solid rgba(66,133,244,.2);border-radius:16px;padding:22px 20px;margin-bottom:16px;text-align:center">';
+        kioskReviewH+='<div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:6px"><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span></div>';
+        kioskReviewH+='<div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:#4285F4;margin-bottom:4px">'+ h(r.headline||'Enjoyed your experience?')+'</div>';
+        kioskReviewH+='<div style="font-size:13px;color:var(--dim);margin-bottom:14px">Scan with your phone to leave a review!</div>';
+        kioskReviewH+='<div style="background:#fff;border-radius:12px;padding:12px;display:inline-block"><img src="'+qrSrc+'" width="180" height="180" style="display:block"></div>';
+        kioskReviewH+='<div style="font-size:12px;color:var(--dim);margin-top:10px">Point your phone camera at the QR code</div>';
+        kioskReviewH+='</div>';
+      }
+
+      // Countdown + auto-reset message
+      kioskReviewH+='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;text-align:center">';
+      kioskReviewH+='<div style="font-size:12px;color:var(--dim)">This screen resets in</div>';
+      kioskReviewH+='<div style="font-family:\'Outfit\';font-size:32px;font-weight:900;color:var(--blue);margin:4px 0" id="kioskCountdown">'+(state.kioskCountdown||30)+'</div>';
+      kioskReviewH+='<div style="font-size:12px;color:var(--dim)">seconds</div>';
+      kioskReviewH+='</div>';
+    }
+    g('reviewDone').innerHTML=kioskReviewH+(state.kioskMode?'':renderReviewCard(false));
   }
 
   // ── Singer Tip Page ──
@@ -538,7 +716,21 @@ function render() {
   g('footerCopy').textContent='© 2026 '+state.bar.name;
 
   // ── KJ Queue ──
-  if(state.kjAuth) renderKJ();
+  if(state.kjAuth) {
+    // Role indicator
+    var ri=g('roleIndicator');
+    if(ri){
+      if(state.kjRole==='admin'){ri.style.background='rgba(180,77,255,.12)';ri.style.color='#b44dff';ri.style.border='1px solid rgba(180,77,255,.3)';ri.textContent='🔑 Admin Mode';}
+      else{ri.style.background='rgba(77,225,255,.1)';ri.style.color='#4de1ff';ri.style.border='1px solid rgba(77,225,255,.25)';ri.textContent='🎧 KJ Mode';}
+    }
+    // Hide manage tab for KJ
+    var mBtn=g('manageTabBtn');
+    if(mBtn){
+      if(state.kjRole==='admin'){mBtn.style.display='block';}
+      else{mBtn.style.display='none';state.kjTab='queue';}
+    }
+    renderKJ();
+  }
 }
 
 function renderTipCard(compact){
@@ -577,25 +769,91 @@ function renderTipCard(compact){
   return html;
 }
 
+function renderKioskTipQR(compact){
+  var t=state.tips;
+  if(!t||!t.enabled)return'';
+
+  var platforms=[];
+  if(t.venmo&&t.venmo.enabled&&t.venmo.handle){
+    platforms.push({label:'Venmo',icon:'💜',color:'#008CFF',url:'https://venmo.com/'+t.venmo.handle});
+  }
+  if(t.cashapp&&t.cashapp.enabled&&t.cashapp.handle){
+    var tag=t.cashapp.handle.replace(/^\$/,'');
+    platforms.push({label:'Cash App',icon:'💚',color:'#00D632',url:'https://cash.app/$'+tag});
+  }
+  if(t.paypal&&t.paypal.enabled&&t.paypal.handle){
+    platforms.push({label:'PayPal',icon:'💙',color:'#0070BA',url:'https://paypal.me/'+t.paypal.handle});
+  }
+  if(!platforms.length)return'';
+
+  var html='<div style="background:linear-gradient(135deg,rgba(255,215,0,.06),rgba(255,107,53,.04));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:'+(compact?'16px':'22px 20px')+';margin-bottom:'+(compact?'14':'18')+'px;text-align:center">';
+  html+='<div style="font-size:'+(compact?'24':'32')+'px;margin-bottom:'+(compact?'4':'6')+'px">💰</div>';
+  html+='<div style="font-family:\'Outfit\';font-size:'+(compact?'15':'18')+'px;font-weight:800;color:var(--gold);margin-bottom:2px">'+ h(t.headline||'Tip Your KJ')+'</div>';
+  if(!compact)html+='<p style="font-size:13px;color:var(--dim);margin:0 0 4px;line-height:1.4">'+ h(t.subtitle||'')+'</p>';
+  html+='<div style="font-size:12px;color:var(--dim);margin-bottom:14px">Scan with your phone to tip</div>';
+
+  // QR codes for each platform
+  html+='<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">';
+  platforms.forEach(function(p){
+    var qrSrc='https://api.qrserver.com/v1/create-qr-code/?size=140x140&bgcolor=111120&color=ffffff&data='+encodeURIComponent(p.url);
+    html+='<div style="text-align:center">';
+    html+='<div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin-bottom:6px"><img src="'+qrSrc+'" width="'+(compact?'100':'120')+'" height="'+(compact?'100':'120')+'" style="display:block"></div>';
+    html+='<div style="font-size:12px;font-weight:700;color:'+p.color+'">'+p.icon+' '+p.label+'</div>';
+    html+='</div>';
+  });
+  html+='</div></div>';
+  return html;
+}
+
 function renderReviewCard(compact){
   var r=state.reviews;
   if(!r||!r.enabled)return'';
   var platforms=[];
   if(r.google&&r.google.enabled&&r.google.url)platforms.push({key:'google',label:'Google',icon:'⭐',color:'#4285F4',url:r.google.url});
-  if(r.yelp&&r.yelp.enabled&&r.yelp.url)platforms.push({key:'yelp',label:'Yelp',icon:'🔴',color:'#FF1A1A',url:r.yelp.url});
+  if(r.yelp&&r.yelp.enabled&&r.yelp.url)platforms.push({key:'yelp',label:'Yelp',icon:'🟥',color:'#FF1A1A',url:r.yelp.url});
   if(r.facebook&&r.facebook.enabled&&r.facebook.url)platforms.push({key:'facebook',label:'Facebook',icon:'👍',color:'#1877F2',url:r.facebook.url});
   if(!platforms.length)return'';
 
-  var html='<div style="background:linear-gradient(135deg,rgba(66,133,244,.06),rgba(255,26,26,.04));border:1px solid rgba(66,133,244,.18);border-radius:14px;padding:'+(compact?'14px 16px':'20px 18px')+';margin-bottom:'+(compact?'14':'20')+'px;text-align:center">';
-  html+='<div style="font-size:'+(compact?'22':'30')+'px;margin-bottom:'+(compact?'4':'6')+'px">⭐</div>';
-  html+='<div style="font-family:\'Outfit\';font-size:'+(compact?'14':'17')+'px;font-weight:800;color:#4285F4;margin-bottom:2px">'+ h(r.headline||'Enjoying Pepe\'s?')+'</div>';
-  if(!compact)html+='<p style="font-size:13px;color:var(--dim);margin:0 0 14px;line-height:1.5">'+ h(r.subtitle||'')+'</p>';
+  if(compact){
+    // ── Compact: subtle bar on welcome screen ──
+    var html='<div style="background:linear-gradient(135deg,rgba(66,133,244,.05),rgba(52,168,83,.04));border:1px solid rgba(66,133,244,.15);border-radius:12px;padding:12px 16px;margin-bottom:14px;text-align:center">';
+    html+='<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:4px"><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span></div>';
+    html+='<div style="font-size:13px;font-weight:700;color:#4285F4;margin-bottom:6px">'+ h(r.headline||'Love Pepe\'s?') +'</div>';
+    html+='<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">';
+    platforms.forEach(function(p){
+      html+='<a href="'+h(p.url)+'" target="_blank" rel="noopener" style="padding:6px 12px;background:'+p.color+'12;border:1px solid '+p.color+'28;border-radius:8px;color:'+p.color+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:4px">'+p.icon+' '+p.label+'</a>';
+    });
+    html+='</div></div>';
+    return html;
+  }
 
-  html+='<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:'+(compact?'8':'0')+'px">';
+  // ── Full: after song submission ──
+  var html='<div style="background:linear-gradient(135deg,rgba(66,133,244,.06),rgba(52,168,83,.04));border:1px solid rgba(66,133,244,.18);border-radius:14px;padding:22px 20px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden">';
+
+  // Stars header with glow
+  html+='<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px">';
+  for(var i=0;i<5;i++){
+    html+='<span style="font-size:28px;display:inline-block;animation:starPop 0.4s ease '+(0.1*i)+'s both">⭐</span>';
+  }
+  html+='</div>';
+  html+='<style>@keyframes starPop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}</style>';
+
+  html+='<div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:#4285F4;margin-bottom:3px">'+ h(r.headline||'Enjoying Pepe\'s?')+'</div>';
+  html+='<p style="font-size:13px;color:var(--dim);margin:0 0 16px;line-height:1.5">'+ h(r.subtitle||'')+'</p>';
+
+  // Review buttons — larger, more prominent
+  html+='<div style="display:flex;flex-direction:column;gap:8px;max-width:280px;margin:0 auto">';
   platforms.forEach(function(p){
-    html+='<a href="'+h(p.url)+'" target="_blank" rel="noopener" style="padding:'+(compact?'8px 14px':'10px 20px')+';background:'+p.color+'15;border:1px solid '+p.color+'33;border-radius:10px;color:'+p.color+';font-size:'+(compact?'12':'14')+'px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:6px;transition:background .2s">'+p.icon+' '+p.label+'</a>';
+    var isGoogle=p.key==='google';
+    html+='<a href="'+h(p.url)+'" target="_blank" rel="noopener" style="padding:14px 18px;background:'+(isGoogle?'linear-gradient(135deg,#4285F4,#34A853)':p.color+'15')+';border:1px solid '+p.color+(isGoogle?'':'33')+';border-radius:12px;color:'+(isGoogle?'#fff':p.color)+';font-size:15px;font-weight:800;cursor:pointer;font-family:\'Outfit\';text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s;letter-spacing:.5px'+(isGoogle?';box-shadow:0 4px 16px rgba(66,133,244,.3)':'')+'">';
+    html+=p.icon+' Review on '+p.label;
+    if(isGoogle)html+=' →';
+    html+='</a>';
   });
-  html+='</div></div>';
+  html+='</div>';
+
+  html+='<div style="font-size:11px;color:var(--dim);margin-top:12px;opacity:.6">Takes 30 seconds · Opens in a new tab</div>';
+  html+='</div>';
   return html;
 }
 
@@ -697,7 +955,13 @@ function renderKJ(){
         html+=`</div>`;
       });
 
-      html+=`<button onclick="saveReviews()" style="width:100%;margin-top:10px;padding:14px 16px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit';text-transform:uppercase">Save Review Links ⭐</button></div>`;
+      html+=`<button onclick="saveReviews()" style="width:100%;margin-top:10px;padding:14px 16px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit';text-transform:uppercase">Save Review Links ⭐</button>`;
+
+      // QR Code section
+      html+=`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;margin:0 0 8px;color:var(--yellow)">🖨️ Printable QR Codes</h4><p style="font-size:12px;color:var(--dim);margin:0 0 12px;line-height:1.5">Print these and put them on every table. Customers scan with their phone camera to leave a review instantly.</p>`;
+      html+=`<button onclick="printReviewQR()" style="width:100%;padding:12px 16px;background:rgba(255,225,77,.12);border:1px solid rgba(255,225,77,.3);border-radius:10px;color:var(--yellow);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">🖨️ Generate & Print QR Codes</button></div>`;
+
+      html+=`</div>`;
     }
     else if(ms==='rules'){
       html+='<h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 10px">📜 Rules</h3>';
@@ -737,10 +1001,16 @@ function renderKJ(){
     else if(ms==='barinfo'){
       const b=state.bar;
       html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--blue)">🏠 Bar Information</h3>`;
-      [{k:'name',l:'Bar Name'},{k:'tagline',l:'Tagline'},{k:'address',l:'Address'},{k:'phone',l:'Phone'},{k:'hours',l:'Hours'},{k:'social',l:'Social Handle'},{k:'kjPin',l:'🔒 KJ PIN'}].forEach(({k,l})=>{
-        html+=`<div style="margin-bottom:10px"><label class="s-label">${l}</label><input class="s-input" value="${h(b[k])}" oninput="state.bar.${k}=this.value" type="${k==='kjPin'?'password':'text'}"></div>`;
+      [{k:'name',l:'Bar Name'},{k:'tagline',l:'Tagline'},{k:'address',l:'Address'},{k:'phone',l:'Phone'},{k:'hours',l:'Hours'},{k:'social',l:'Social Handle'},{k:'kjPin',l:'🎧 KJ PIN'},{k:'adminPin',l:'🔑 Admin PIN'}].forEach(({k,l})=>{
+        html+=`<div style="margin-bottom:10px"><label class="s-label">${l}</label><input class="s-input" value="${h(b[k])}" oninput="state.bar.${k}=this.value" type="${(k==='kjPin'||k==='adminPin')?'password':'text'}"></div>`;
       });
       html+=`<button onclick="saveBar()" style="padding:8px 14px;background:linear-gradient(135deg,var(--blue),var(--green));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Info</button></div>`;
+
+      // Kiosk mode section
+      var kioskUrl=window.location.origin+window.location.pathname+'?kiosk=1';
+      html+=`<div class="s-card" style="border:1px solid rgba(255,45,138,.2)"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;margin:0 0 8px;color:var(--pink)">📱 Customer Tablet (Kiosk Mode)</h4><p style="font-size:12px;color:var(--dim);margin:0 0 12px;line-height:1.5">Open this link on the tablet customers will use. It hides the KJ controls, shows the review QR code after each signup, and auto-resets for the next singer.</p>`;
+      html+=`<div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);word-break:break-all;margin-bottom:10px">${h(kioskUrl)}</div>`;
+      html+=`<button onclick="copyKioskUrl()" style="width:100%;padding:10px 16px;background:rgba(255,45,138,.12);border:1px solid rgba(255,45,138,.3);border-radius:10px;color:var(--pink);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">📋 Copy Kiosk Link</button></div>`;
     }
     mEl.innerHTML=html;
   }
@@ -777,6 +1047,99 @@ function exportCustomersCSV(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
   toast('CSV downloaded!');
+}
+
+// ═══════ STAGE DISPLAY ═══════
+var stageInterval=null;
+var stageQrIndex=0;
+
+function openStageDisplay(){
+  g('stageDisplay').classList.remove('hidden');
+  g('stageDisplay').style.display='flex';
+  updateStageDisplay();
+  stageInterval=setInterval(function(){
+    stageQrIndex++;
+    updateStageDisplay();
+  },6000); // rotate QR every 6 seconds
+}
+
+function closeStageDisplay(){
+  g('stageDisplay').classList.add('hidden');
+  g('stageDisplay').style.display='none';
+  if(stageInterval)clearInterval(stageInterval);
+  stageInterval=null;
+}
+
+function updateStageDisplay(){
+  var q=state.queue;
+  var cs=q.find(function(s){return s.status==='singing';});
+  var waiting=q.filter(function(s){return s.status==='waiting';});
+  var nextUp=waiting.length>0?waiting[0]:null;
+  var barName=state.bar.name||"PEPE'S";
+  var r=state.reviews||{};
+
+  // Build QR rotation list
+  var qrItems=[];
+  var appUrl=window.location.href;
+  qrItems.push({label:'🎤 Scan to Join the Waitlist',url:appUrl,sub:'Sign up for your song!'});
+  if(r.google&&r.google.enabled&&r.google.url)qrItems.push({label:'⭐ Leave us a Google Review',url:r.google.url,sub:'It takes 30 seconds!'});
+  if(r.yelp&&r.yelp.enabled&&r.yelp.url)qrItems.push({label:'⭐ Review us on Yelp',url:r.yelp.url,sub:'We appreciate it!'});
+  if(r.facebook&&r.facebook.enabled&&r.facebook.url)qrItems.push({label:'👍 Review us on Facebook',url:r.facebook.url,sub:'Thanks for the love!'});
+
+  var currentQr=qrItems[stageQrIndex%qrItems.length];
+  var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&bgcolor=050508&color=ffffff&data='+encodeURIComponent(currentQr.url);
+
+  var html='';
+
+  // Bar header
+  html+='<div style="font-size:28px;margin-bottom:4px">🌶️🎤</div>';
+  html+='<div style="font-family:\'Outfit\';font-size:36px;font-weight:900;background:linear-gradient(135deg,#ffe14d,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px">'+barName+'</div>';
+  html+='<div style="font-size:14px;letter-spacing:6px;text-transform:uppercase;color:#ff2d8a;font-weight:600;margin-bottom:24px">'+(state.bar.tagline||'Karaoke Bar')+'</div>';
+
+  if(cs){
+    // Someone is singing
+    html+='<div style="background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);border-radius:20px;padding:24px 30px;margin-bottom:20px">';
+    html+='<div style="font-size:12px;text-transform:uppercase;letter-spacing:4px;color:#ff6b35;font-weight:700;margin-bottom:8px;animation:pu 2s infinite">🎙️ NOW SINGING</div>';
+    html+='<div style="font-family:\'Outfit\';font-size:42px;font-weight:900;margin-bottom:6px">'+h(cs.name)+'</div>';
+    html+='<div style="font-size:22px;color:#ffe14d;font-weight:600">🎵 '+h(cs.song)+'</div>';
+    html+='<div style="font-size:16px;color:#7a7a99;margin-top:4px">by '+h(cs.author)+'</div>';
+    html+='</div>';
+  } else {
+    // No one singing
+    html+='<div style="background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.15);border-radius:20px;padding:24px 30px;margin-bottom:20px">';
+    html+='<div style="font-size:40px;margin-bottom:8px">🎤</div>';
+    html+='<div style="font-family:\'Outfit\';font-size:28px;font-weight:800;color:#39ff73">Stage is Open!</div>';
+    html+='<div style="font-size:16px;color:#7a7a99;margin-top:4px">Scan below to sign up</div>';
+    html+='</div>';
+  }
+
+  // Up next
+  if(nextUp){
+    html+='<div style="margin-bottom:20px;font-size:14px;color:#7a7a99">';
+    html+='<span style="color:#4de1ff;font-weight:700">UP NEXT:</span> '+h(nextUp.name)+' — '+h(nextUp.song);
+    if(waiting.length>1) html+=' <span style="opacity:.5">(+' +(waiting.length-1)+' more)</span>';
+    html+='</div>';
+  }
+
+  // QR Code section
+  html+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;display:inline-block">';
+  html+='<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px">'+currentQr.label+'</div>';
+  html+='<div style="background:#fff;border-radius:12px;padding:12px;display:inline-block"><img src="'+qrUrl+'" width="180" height="180" style="display:block;image-rendering:pixelated"></div>';
+  html+='<div style="font-size:13px;color:#7a7a99;margin-top:8px">'+currentQr.sub+'</div>';
+
+  // Dots indicator
+  html+='<div style="display:flex;gap:6px;justify-content:center;margin-top:10px">';
+  for(var i=0;i<qrItems.length;i++){
+    var isActive=i===(stageQrIndex%qrItems.length);
+    html+='<div style="width:'+(isActive?'20':'6')+'px;height:6px;border-radius:3px;background:'+(isActive?'#ff2d8a':'rgba(255,255,255,.2)')+';transition:all .3s"></div>';
+  }
+  html+='</div>';
+  html+='</div>';
+
+  // Queue count
+  html+='<div style="margin-top:20px;font-size:13px;color:#7a7a99">'+waiting.length+' singer'+(waiting.length!==1?'s':'')+' in line</div>';
+
+  g('stageContent').innerHTML=html;
 }
 
 // ── Init ──
