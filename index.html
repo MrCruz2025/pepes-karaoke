@@ -215,8 +215,7 @@ input[type=number]{-moz-appearance:textfield}
     </div>
     <div id="kjQueue"></div>
     <div id="kjManage" class="hidden"></div>
-    <div style="text-align:center;padding-top:14px;display:flex;gap:8px;justify-content:center">
-      <button onclick="openStageDisplay()" style="background:linear-gradient(135deg,var(--pink),var(--orange));border:none;color:#fff;padding:9px 20px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Outfit';letter-spacing:.5px">📺 Stage Display</button>
+    <div style="text-align:center;padding-top:14px">
       <button onclick="kjLock()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:9px 20px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit">🔒 Lock</button>
     </div>
   </div>
@@ -473,7 +472,7 @@ function submitSong() {
       if(cdEl)cdEl.textContent=state.kioskCountdown;
       if(state.kioskCountdown<=0){
         clearInterval(kioskTimer);kioskTimer=null;
-        resetSinger();
+        resetSingerToDisplay();
       }
     },1000);
   }
@@ -686,25 +685,28 @@ function _render() {
   if(cs){g('nowSingingBanner').classList.remove('hidden');g('nowSingingName').textContent=cs.name;g('nowSingingInfo').textContent=cs.song+' — '+cs.author;}
   else g('nowSingingBanner').classList.add('hidden');
 
-  g('welcomeTip').classList.toggle('hidden',!state.tips.enabled);
+  // Tips - kiosk only (QR codes for customer phones)
+  g('welcomeTip').classList.toggle('hidden',!state.tips.enabled || !state.kioskMode);
   g('welcomeTipTitle').textContent=state.tips.headline||'Tip Your KJ';
 
-  // Events
-  let evH='';
+  // Events - show on both (just info)
+  var evH='';
   if(state.events.length){
     evH='<div style="margin-top:10px;background:rgba(255,45,138,.03);border:1px solid rgba(255,45,138,.1);border-radius:14px;padding:16px;text-align:left"><div style="font-size:12px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">🔥 Events</div>';
-    state.events.forEach(ev=>{evH+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;padding:7px 10px;background:${ev.color}08;border-radius:8px"><span style="font-weight:900;font-size:11px;color:${ev.color};min-width:28px;font-family:'Outfit'">${h(ev.day)}</span><div><div style="font-weight:700;font-size:13px">${h(ev.name)}</div><div style="font-size:11px;color:var(--dim)">${h(ev.detail)}</div></div></div>`;});
+    state.events.forEach(function(ev){evH+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;padding:7px 10px;background:'+ev.color+'08;border-radius:8px"><span style="font-weight:900;font-size:11px;color:'+ev.color+';min-width:28px;font-family:\'Outfit\'">'+h(ev.day)+'</span><div><div style="font-weight:700;font-size:13px">'+h(ev.name)+'</div><div style="font-size:11px;color:var(--dim)">'+h(ev.detail)+'</div></div></div>';});
     evH+='</div>';
   }
   g('eventsSection').innerHTML=evH;
 
-  // Offer
-  let ofH='';
+  // Offer - show on both (just promo info)
+  var ofH='';
   if(state.offer.active){
-    ofH=`<div style="margin-top:14px;background:rgba(255,225,77,.05);border:1px dashed rgba(255,225,77,.27);border-radius:12px;padding:14px 18px;text-align:center"><div style="font-size:20px;margin-bottom:2px">${h(state.offer.emoji)}</div><div style="font-size:14px;font-weight:800;color:var(--yellow);font-family:'Outfit'">${h(state.offer.title)}</div><div style="font-size:13px;color:var(--dim);margin-top:4px">${h(state.offer.text)}</div></div>`;
+    ofH='<div style="margin-top:14px;background:rgba(255,225,77,.05);border:1px dashed rgba(255,225,77,.27);border-radius:12px;padding:14px 18px;text-align:center"><div style="font-size:20px;margin-bottom:2px">'+h(state.offer.emoji)+'</div><div style="font-size:14px;font-weight:800;color:var(--yellow);font-family:\'Outfit\'">'+h(state.offer.title)+'</div><div style="font-size:13px;color:var(--dim);margin-top:4px">'+h(state.offer.text)+'</div></div>';
   }
   g('offerSection').innerHTML=ofH;
-  g('reviewWelcome').innerHTML=renderReviewCard(true);
+
+  // Reviews - kiosk only (QR codes for customer phones)
+  g('reviewWelcome').innerHTML=state.kioskMode?renderReviewCard(true):'';
 
   // Rules
   let ruH='';state.rules.forEach((r,i)=>{ruH+=`<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">${i+1}.</span><span>${h(r)}</span></div>`;});
@@ -722,7 +724,7 @@ function _render() {
     }
     g('positionCard').innerHTML=posH;
     g('songSummary').innerHTML=`<div style="font-size:11px;color:var(--dim)">${h(g('fName').value)} · ${h(g('fPhone').value)}</div><div style="font-size:16px;font-weight:800;font-family:'Outfit';margin-top:3px">🎵 ${h(g('fSong').value)}</div><div style="font-size:13px;color:var(--yellow);margin-top:2px">by ${h(g('fAuthor').value)}</div>`;
-    g('tipFull').innerHTML=state.kioskMode?renderKioskTipQR():renderTipCard(false);
+    g('tipFull').innerHTML=state.kioskMode?renderKioskTipQR():'';
 
     // Kiosk mode: show review QR + countdown
     var kioskReviewH='';
@@ -751,7 +753,7 @@ function _render() {
       kioskReviewH+='<div style="font-size:12px;color:var(--dim)">seconds</div>';
       kioskReviewH+='</div>';
     }
-    g('reviewDone').innerHTML=kioskReviewH+(state.kioskMode?'':renderReviewCard(false));
+    g('reviewDone').innerHTML=state.kioskMode?kioskReviewH:'';
   }
 
   // ── Singer Tip Page ──
@@ -1096,6 +1098,20 @@ function exportCustomersCSV(){
   toast('CSV downloaded!');
 }
 
+function resetSingerToDisplay(){
+  state.myId=null;state.returningCustomer=null;
+  var nameEl=document.getElementById('fName');if(nameEl)nameEl.value='';
+  var phoneEl=document.getElementById('fPhone');if(phoneEl)phoneEl.value='';
+  var songEl=document.getElementById('fSong');if(songEl)songEl.value='';
+  var authorEl=document.getElementById('fAuthor');if(authorEl)authorEl.value='';
+  state.selectedTip=null;state.customTip="";
+  var rb=document.getElementById('returningBanner');if(rb)rb.classList.add('hidden');
+  var pf=document.getElementById('phoneField');if(pf)pf.classList.remove('hidden');
+  var cm=document.getElementById('customerMatches');if(cm)cm.classList.add('hidden');
+  if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}
+  openStageDisplay();
+}
+
 // ═══════ STAGE DISPLAY ═══════
 var stageInterval=null;
 var stageQrIndex=0;
@@ -1115,6 +1131,10 @@ function closeStageDisplay(){
   g('stageDisplay').style.display='none';
   if(stageInterval)clearInterval(stageInterval);
   stageInterval=null;
+  if(state.kioskMode){
+    state.singerView='singerWelcome';
+    showView('singerWelcome');
+  }
 }
 
 function updateStageDisplay(){
@@ -1186,11 +1206,21 @@ function updateStageDisplay(){
   // Queue count
   html+='<div style="margin-top:20px;font-size:13px;color:#7a7a99">'+waiting.length+' singer'+(waiting.length!==1?'s':'')+' in line</div>';
 
+  // Sign up button (kiosk mode)
+  if(state.kioskMode){
+    html+='<button onclick="closeStageDisplay()" style="margin-top:24px;padding:18px 40px;background:linear-gradient(135deg,#ff2d8a,#ff6b35);color:#fff;border:none;border-radius:16px;font-size:20px;font-weight:900;cursor:pointer;font-family:\'Outfit\';letter-spacing:1px;box-shadow:0 8px 30px rgba(255,45,138,.4);animation:pu 2s infinite">🎤 TAP TO SIGN UP</button>';
+  }
+
   g('stageContent').innerHTML=html;
 }
 
 // ── Init ──
 try { render(); } catch(e) {}
+
+// Auto-open Stage Display in kiosk mode
+if(state.kioskMode){
+  setTimeout(function(){ try{ openStageDisplay(); }catch(e){} }, 1500);
+}
 </script>
 </body>
 </html>
