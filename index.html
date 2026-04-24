@@ -418,7 +418,19 @@ function switchMode(m) {
   render();
 }
 
-function showView(v) { state.singerView=v; render(); }
+function showView(v) {
+  state.singerView=v;
+  // Direct view toggle as immediate fallback
+  var views=['singerWelcome','singerForm','singerDone','singerTip'];
+  views.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){
+      if(id===v){el.classList.remove('hidden');el.style.display='';}
+      else{el.classList.add('hidden');}
+    }
+  });
+  try{render();}catch(e){console.log('render error:',e);}
+}
 
 function switchKjTab(t) {
   state.kjTab=t;
@@ -605,7 +617,10 @@ var pinEl=document.getElementById('pinInput');if(pinEl)pinEl.addEventListener('k
 
 // ═══════ RENDER ═══════
 function render() {
-  const q=state.queue, cs=q.find(s=>s.status==='singing'), wc=q.filter(s=>s.status==='waiting').length;
+  try { _render(); } catch(e) { console.log('Render error:', e); }
+}
+function _render() {
+  var q=state.queue, cs=q.find(function(s){return s.status==='singing';}), wc=q.filter(function(s){return s.status==='waiting';}).length;
 
   // Nav
   g('navName').textContent=state.bar.name;
