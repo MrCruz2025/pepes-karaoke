@@ -296,14 +296,10 @@ window.onerror = function(msg, url, line) {
   return false;
 };
 
-// ── Kiosk mode detection ──
-if (window.location.search.indexOf('kiosk=1') > -1) {
-  state.kioskMode = true;
-}
 var kioskTimer = null;
 
 // ═══════ STATE ═══════
-let state = {
+var state = {
   mode: 'singer',
   singerView: 'singerWelcome',
   queue: [],
@@ -325,6 +321,11 @@ let state = {
   customers:[],customerSearch:"",editingEvent:null,
   returningCustomer:null,kioskMode:false,kjRole:null,
 };
+
+// ── Kiosk mode detection ──
+if (window.location.search.indexOf('kiosk=1') > -1) {
+  state.kioskMode = true;
+}
 
 // ═══════ RETURNING SINGER FUNCTIONS ═══════
 function searchCustomer() {
