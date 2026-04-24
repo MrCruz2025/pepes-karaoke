@@ -155,7 +155,7 @@ input[type=number]{-moz-appearance:textfield}
       <button onclick="togglePolicy()" style="width:100%;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:var(--text);cursor:pointer;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:inherit">
         <span>📜 Karaoke Rules</span><span id="policyArrow" style="transition:transform .3s;font-size:10px">▼</span>
       </button>
-      <div id="policyContent" class="hidden fi" style="padding:0 16px 16px;font-size:12px;line-height:1.7;color:var(--dim)"></div>
+      <div id="policyContent" style="display:none;padding:0 16px 16px;font-size:12px;line-height:1.7;color:var(--dim)"></div>
     </div>
   </div>
 
@@ -586,17 +586,26 @@ function deleteRule(i){state.rules.splice(i,1);saveRules();}
 function moveRule(i,dir){const j=i+dir;if(j<0||j>=state.rules.length)return;[state.rules[i],state.rules[j]]=[state.rules[j],state.rules[i]];saveRules();}
 
 function togglePolicy(){
-  var pc=g('policyContent');
+  var pc=document.getElementById('policyContent');
+  var arrow=document.getElementById('policyArrow');
+  if(!pc) return;
   // Populate rules if empty
-  if(!pc.innerHTML){
+  if(!pc.innerHTML || pc.innerHTML.length < 10){
     var ruH='';
-    state.rules.forEach(function(r,i){
-      ruH+='<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">'+(i+1)+'.</span><span>'+h(r)+'</span></div>';
-    });
+    for(var i=0;i<state.rules.length;i++){
+      ruH+='<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:#ffe14d;font-weight:700;min-width:16px">'+(i+1)+'.</span><span>'+state.rules[i]+'</span></div>';
+    }
     pc.innerHTML=ruH;
   }
-  pc.classList.toggle('hidden');
-  g('policyArrow').style.transform=pc.classList.contains('hidden')?'none':'rotate(180deg)';
+  // Toggle visibility using style directly
+  if(pc.style.display==='none' || pc.style.display===''){
+    pc.style.display='block';
+    pc.className='fi';
+    if(arrow) arrow.style.transform='rotate(180deg)';
+  } else {
+    pc.style.display='none';
+    if(arrow) arrow.style.transform='none';
+  }
 }
 
 // ═══════ TIP HELPERS ═══════
