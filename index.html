@@ -585,7 +585,19 @@ function deleteEvent(id){state.events=state.events.filter(e=>e.id!==id);saveEven
 function deleteRule(i){state.rules.splice(i,1);saveRules();}
 function moveRule(i,dir){const j=i+dir;if(j<0||j>=state.rules.length)return;[state.rules[i],state.rules[j]]=[state.rules[j],state.rules[i]];saveRules();}
 
-function togglePolicy(){g('policyContent').classList.toggle('hidden');g('policyArrow').style.transform=g('policyContent').classList.contains('hidden')?'none':'rotate(180deg)';}
+function togglePolicy(){
+  var pc=g('policyContent');
+  // Populate rules if empty
+  if(!pc.innerHTML){
+    var ruH='';
+    state.rules.forEach(function(r,i){
+      ruH+='<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">'+(i+1)+'.</span><span>'+h(r)+'</span></div>';
+    });
+    pc.innerHTML=ruH;
+  }
+  pc.classList.toggle('hidden');
+  g('policyArrow').style.transform=pc.classList.contains('hidden')?'none':'rotate(180deg)';
+}
 
 // ═══════ TIP HELPERS ═══════
 function selectTip(amt){state.selectedTip=state.selectedTip===amt?null:amt;if(amt!=='custom')state.customTip="";render();}
