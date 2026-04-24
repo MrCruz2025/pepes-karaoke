@@ -90,13 +90,13 @@ input[type=number]{-moz-appearance:textfield}
   <div class="nav">
     <div class="nav-logo"><span style="font-size:20px">🌶️</span><span id="navName">PEPE'S</span></div>
     <div class="nav-tabs">
-      <button class="nav-tab active" onclick="switchMode('singer')">🎤 Singer</button>
-      <button class="nav-tab" onclick="switchMode('kj')">🎧 KJ</button>
+      <button class="nav-tab" onclick="switchMode('singer')">🎤 Singer</button>
+      <button class="nav-tab active" onclick="switchMode('kj')">🎧 KJ</button>
     </div>
   </div>
 
   <!-- ═══════════ SINGER: WELCOME ═══════════ -->
-  <div id="singerWelcome" class="sl">
+  <div id="singerWelcome" class="hidden sl">
     <div style="text-align:center;padding-top:24px">
       <div class="mc" style="font-size:56px;margin-bottom:8px">🎤</div>
       <h1 id="welcomeTitle" style="font-family:'Outfit';font-size:32px;font-weight:900;margin:6px 0 0;background:linear-gradient(135deg,var(--yellow),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Welcome to PEPE'S</h1>
@@ -178,7 +178,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- ═══════════ KJ: LOGIN ═══════════ -->
-  <div id="kjLogin" class="hidden sl" style="text-align:center;padding-top:40px">
+  <div id="kjLogin" class="sl" style="text-align:center;padding-top:40px">
     <div style="font-size:44px;margin-bottom:10px">🔐</div>
     <h2 style="font-family:'Outfit';font-size:20px;font-weight:800;margin:0 0 5px">Staff Login</h2>
     <p style="color:var(--dim);font-size:13px;margin:0 0 20px">Select your role and enter PIN</p>
@@ -222,7 +222,7 @@ input[type=number]{-moz-appearance:textfield}
   </div>
 
   <!-- FOOTER (singer views) -->
-  <div id="singerFooter" style="text-align:center;padding:28px 0 10px;margin-top:18px;border-top:1px solid var(--border)">
+  <div id="singerFooter" class="hidden" style="text-align:center;padding:28px 0 10px;margin-top:18px;border-top:1px solid var(--border)">
     <div id="footerInfo" style="font-size:11px;color:var(--dim);line-height:1.8"></div>
     <div id="footerSocial" style="font-size:11px;color:var(--pink);font-weight:600;margin-top:6px"></div>
     <div id="footerCopy" style="font-size:9px;color:var(--dim);margin-top:10px;opacity:.4"></div>
