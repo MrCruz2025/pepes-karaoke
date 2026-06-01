@@ -146,9 +146,25 @@ input[type=number]{-moz-appearance:textfield}
         <div><div style="font-size:12px;color:var(--green);font-weight:700">✅ Welcome back!</div><div id="returningInfo" style="font-size:12px;color:var(--dim);margin-top:2px"></div></div>
         <button onclick="clearReturning()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Change</button>
       </div>
-      <div id="phoneField" style="margin-bottom:14px"><label class="s-label">📱 Phone Number</label><input class="s-input" id="fPhone" type="tel" placeholder="e.g. (555) 123-4567" autocomplete="tel"></div>
+      <div id="phoneField" style="margin-bottom:14px"><label class="s-label">📱 Phone Number</label><input class="s-input" id="fPhone" type="tel" placeholder="e.g. (555) 123-4567" autocomplete="tel"><div id="phoneError" style="display:none;color:#ff4466;font-size:11px;margin-top:5px;font-weight:600"></div></div>
       <div style="margin-bottom:14px"><label class="s-label">🎵 Song Title</label><input class="s-input" id="fSong" type="text" placeholder="e.g. Bohemian Rhapsody"></div>
       <div style="margin-bottom:14px"><label class="s-label">🎸 Artist</label><input class="s-input" id="fAuthor" type="text" placeholder="e.g. Queen"></div>
+      <!-- Age Verification (REQUIRED) -->
+      <div style="margin-bottom:10px">
+        <label onclick="toggleAge()" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px 14px;background:var(--input);border:1px solid var(--border);border-radius:10px;transition:border .2s" id="ageLabel">
+          <div id="ageBox" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:transparent"></div>
+          <span style="font-size:12px;color:var(--dim);line-height:1.5">I confirm I am <span style="color:var(--yellow);font-weight:700">21 years or older</span> <span style="color:var(--red);font-size:10px;font-weight:700">REQUIRED</span></span>
+        </label>
+        <div id="ageError" style="display:none;color:#ff4466;font-size:11px;margin-top:5px;font-weight:600;padding-left:4px">☝️ You must be 21+ to sign up</div>
+      </div>
+
+      <!-- Marketing Opt-In (OPTIONAL) -->
+      <div style="margin-bottom:16px">
+        <label onclick="toggleMarketing()" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px 14px;background:var(--input);border:1px solid var(--border);border-radius:10px;transition:border .2s" id="marketingLabel">
+          <div id="marketingBox" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:transparent"></div>
+          <span style="font-size:12px;color:var(--dim);line-height:1.5">🎉 <span style="color:var(--green);font-weight:600">Yes!</span> Send me exclusive deals, event invites & offers from <span style="color:var(--text);font-weight:600" id="consentBarName">PEPE'S</span>. <span style="font-size:10px;opacity:.6">Optional · Unsubscribe anytime</span></span>
+        </label>
+      </div>
       <button id="submitBtn" onclick="submitSong()" style="width:100%;padding:15px;background:var(--border);color:var(--dim);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;letter-spacing:1px;text-transform:uppercase;font-family:'Outfit';transition:all .2s">Submit Request 🎤</button>
     </div>
     <div class="s-card" style="padding:0;overflow:hidden">
@@ -318,7 +334,7 @@ var state = {
   selectedTip:null,customTip:"",
   kjTab:'queue',mgmtSection:'events',
   customers:[],customerSearch:"",editingEvent:null,
-  returningCustomer:null,kioskMode:false,kjRole:null,
+  returningCustomer:null,kioskMode:false,kjRole:null,ageChecked:false,marketingChecked:false,
 };
 
 // ── Kiosk mode detection ──
@@ -371,6 +387,17 @@ function pickReturning(id) {
   g('returningBanner').classList.remove('hidden');
   g('returningInfo').textContent = '📱 ' + c.phone + ' · ' + (c.visits || 1) + ' visit' + ((c.visits || 1) > 1 ? 's' : '');
   g('phoneField').classList.add('hidden');
+  var phoneErr=g('phoneError');if(phoneErr)phoneErr.style.display='none';
+  // Auto-check age for returning customers (already verified)
+  state.ageChecked=true;
+  var box=g('ageBox');if(box){box.style.background='var(--green)';box.style.borderColor='var(--green)';box.innerHTML='<span style="color:#000;font-size:14px;font-weight:900">✓</span>';}
+  var label=g('ageLabel');if(label)label.style.borderColor='rgba(57,255,115,.3)';
+  // Auto-check marketing if they opted in before
+  if(c.marketingConsent){
+    state.marketingChecked=true;
+    var mb=g('marketingBox');if(mb){mb.style.background='var(--green)';mb.style.borderColor='var(--green)';mb.innerHTML='<span style="color:#000;font-size:14px;font-weight:900">✓</span>';}
+    var ml=g('marketingLabel');if(ml)ml.style.borderColor='rgba(57,255,115,.3)';
+  }
   g('fSong').focus();
   checkFormValid();
 }
@@ -385,8 +412,143 @@ function clearReturning() {
   checkFormValid();
 }
 
+// Portland/Oregon/SW Washington local area codes
+var LOCAL_AREA_CODES = {
+  '503':'Portland, OR','971':'Portland, OR','541':'Southern/Central OR','458':'Eugene, OR',
+  '360':'Vancouver, WA','564':'Vancouver, WA','206':'Seattle, WA','253':'Tacoma, WA',
+  '425':'Bellevue, WA','509':'Eastern WA'
+};
+
+var AREA_CODE_STATES = {
+  '201':'NJ','202':'DC','203':'CT','205':'AL','206':'WA','207':'ME','208':'ID','209':'CA',
+  '210':'TX','212':'NY','213':'CA','214':'TX','215':'PA','216':'OH','217':'IL','218':'MN',
+  '219':'IN','224':'IL','225':'LA','228':'MS','229':'GA','231':'MI','234':'OH','239':'FL',
+  '240':'MD','248':'MI','251':'AL','252':'NC','253':'WA','254':'TX','256':'AL','260':'IN',
+  '262':'WI','267':'PA','269':'MI','270':'KY','272':'PA','276':'VA','278':'MI','281':'TX',
+  '301':'MD','302':'DE','303':'CO','304':'WV','305':'FL','307':'WY','308':'NE','309':'IL',
+  '310':'CA','312':'IL','313':'MI','314':'MO','315':'NY','316':'KS','317':'IN','318':'LA',
+  '319':'IA','320':'MN','321':'FL','323':'CA','325':'TX','330':'OH','331':'IL','334':'AL',
+  '336':'NC','337':'LA','339':'MA','340':'VI','346':'TX','347':'NY','351':'MA','352':'FL',
+  '360':'WA','361':'TX','364':'KY','380':'OH','385':'UT','386':'FL','401':'RI','402':'NE',
+  '404':'GA','405':'OK','406':'MT','407':'FL','408':'CA','409':'TX','410':'MD','412':'PA',
+  '413':'MA','414':'WI','415':'CA','417':'MO','419':'OH','423':'TN','424':'CA','425':'WA',
+  '430':'TX','432':'TX','434':'VA','435':'UT','440':'OH','442':'CA','443':'MD','458':'OR',
+  '469':'TX','470':'GA','475':'CT','478':'GA','479':'AR','480':'AZ','484':'PA','501':'AR',
+  '502':'KY','503':'OR','504':'LA','505':'NM','507':'MN','508':'MA','509':'WA','510':'CA',
+  '512':'TX','513':'OH','515':'IA','516':'NY','517':'MI','518':'NY','520':'AZ','530':'CA',
+  '531':'NE','534':'WI','539':'OK','540':'VA','541':'OR','551':'NJ','557':'MO','559':'CA',
+  '561':'FL','562':'CA','563':'IA','564':'WA','567':'OH','570':'PA','571':'VA','573':'MO',
+  '574':'IN','575':'NM','580':'OK','585':'NY','586':'MI','601':'MS','602':'AZ','603':'NH',
+  '605':'SD','606':'KY','607':'NY','608':'WI','609':'NJ','610':'PA','612':'MN','614':'OH',
+  '615':'TN','616':'MI','617':'MA','618':'IL','619':'CA','620':'KS','623':'AZ','626':'CA',
+  '628':'CA','629':'TN','630':'IL','631':'NY','636':'MO','641':'IA','646':'NY','650':'CA',
+  '651':'MN','657':'CA','660':'MO','661':'CA','662':'MS','667':'MD','669':'CA','678':'GA',
+  '681':'WV','682':'TX','689':'FL','701':'ND','702':'NV','703':'VA','704':'NC','706':'GA',
+  '707':'CA','708':'IL','712':'IA','713':'TX','714':'CA','715':'WI','716':'NY','717':'PA',
+  '718':'NY','719':'CO','720':'CO','724':'PA','725':'NV','727':'FL','731':'TN','732':'NJ',
+  '734':'MI','737':'TX','740':'OH','743':'NC','747':'CA','754':'FL','757':'VA','760':'CA',
+  '762':'GA','763':'MN','765':'IN','769':'MS','770':'GA','772':'FL','773':'IL','774':'MA',
+  '775':'NV','779':'IL','781':'MA','785':'KS','786':'FL','801':'UT','802':'VT','803':'SC',
+  '804':'VA','805':'CA','806':'TX','808':'HI','810':'MI','812':'IN','813':'FL','814':'PA',
+  '815':'IL','816':'MO','817':'TX','818':'CA','820':'CA','828':'NC','830':'TX','831':'CA',
+  '832':'TX','843':'SC','845':'NY','847':'IL','848':'NJ','850':'FL','856':'NJ','857':'MA',
+  '858':'CA','859':'KY','860':'CT','862':'NJ','863':'FL','864':'SC','865':'TN','870':'AR',
+  '872':'IL','878':'PA','901':'TN','903':'TX','904':'FL','906':'MI','907':'AK','908':'NJ',
+  '909':'CA','910':'NC','912':'GA','913':'KS','914':'NY','915':'TX','916':'CA','917':'NY',
+  '918':'OK','919':'NC','920':'WI','925':'CA','928':'AZ','929':'NY','930':'IN','931':'TN',
+  '934':'NY','936':'TX','937':'OH','938':'AL','940':'TX','941':'FL','947':'MI','949':'CA',
+  '951':'CA','952':'MN','954':'FL','956':'TX','959':'CT','970':'CO','971':'OR','972':'TX',
+  '973':'NJ','978':'MA','979':'TX','980':'NC','984':'NC','985':'LA','989':'MI'
+};
+
+function getPhoneRegion(digits) {
+  var areaCode = digits.substring(0,3);
+  var local = LOCAL_AREA_CODES[areaCode];
+  var stateAbbr = AREA_CODE_STATES[areaCode];
+  return {
+    areaCode: areaCode,
+    isLocal: !!local,
+    localName: local || null,
+    state: stateAbbr || '??',
+    label: local ? '🟢 ' + local : (stateAbbr ? '🟡 ' + stateAbbr : '🔴 Unknown')
+  };
+}
+
+function validatePhone(phone) {
+  // Strip everything except digits
+  var digits = phone.replace(/[^0-9]/g, '');
+  // Must be 10 digits (US) or 11 starting with 1
+  if (digits.length === 11 && digits[0] === '1') digits = digits.substring(1);
+  if (digits.length !== 10) return { valid: false, msg: '📱 Must be 10 digits', digits: digits };
+  // Can't be all same digit (8888888888, 1111111111, etc)
+  if (/^(\d)\1{9}$/.test(digits)) return { valid: false, msg: '❌ That doesn\'t look like a real number', digits: digits };
+  // Can't be sequential (1234567890, 0987654321)
+  if (digits === '1234567890' || digits === '0987654321') return { valid: false, msg: '❌ Please enter your real phone number', digits: digits };
+  // Can't start with 0 or 1 (invalid US area codes)
+  if (digits[0] === '0' || digits[0] === '1') return { valid: false, msg: '❌ Invalid area code', digits: digits };
+  // Can't have 555 as exchange (fake TV numbers) except 5550100-5550199
+  if (digits.substring(3,6) === '555') return { valid: false, msg: '❌ Please enter your real phone number', digits: digits };
+  return { valid: true, msg: '', digits: digits };
+}
+
+function toggleAge(){
+  state.ageChecked=!state.ageChecked;
+  var box=g('ageBox');var label=g('ageLabel');var err=g('ageError');
+  if(state.ageChecked){
+    box.style.background='var(--green)';box.style.borderColor='var(--green)';
+    box.innerHTML='<span style="color:#000;font-size:14px;font-weight:900">✓</span>';
+    if(label)label.style.borderColor='rgba(57,255,115,.3)';
+    if(err)err.style.display='none';
+  } else {
+    box.style.background='transparent';box.style.borderColor='var(--border)';
+    box.innerHTML='';
+    if(label)label.style.borderColor='var(--border)';
+  }
+  checkFormValid();
+}
+
+function toggleMarketing(){
+  state.marketingChecked=!state.marketingChecked;
+  var box=g('marketingBox');var label=g('marketingLabel');
+  if(state.marketingChecked){
+    box.style.background='var(--green)';box.style.borderColor='var(--green)';
+    box.innerHTML='<span style="color:#000;font-size:14px;font-weight:900">✓</span>';
+    if(label)label.style.borderColor='rgba(57,255,115,.3)';
+  } else {
+    box.style.background='transparent';box.style.borderColor='var(--border)';
+    box.innerHTML='';
+    if(label)label.style.borderColor='var(--border)';
+  }
+  checkFormValid();
+}
+
 function checkFormValid() {
-  var ok = g('fName').value.trim() && g('fPhone').value.trim() && g('fSong').value.trim() && g('fAuthor').value.trim();
+  var name = g('fName').value.trim();
+  var phone = g('fPhone').value.trim();
+  var song = g('fSong').value.trim();
+  var author = g('fAuthor').value.trim();
+  var phoneErr = g('phoneError');
+  var phoneInput = g('fPhone');
+  var allFilled = name && phone && song && author;
+  var phoneOk = true;
+
+  // Validate phone if entered
+  if (phone) {
+    var result = validatePhone(phone);
+    if (!result.valid) {
+      phoneOk = false;
+      if (phoneErr) { phoneErr.textContent = result.msg; phoneErr.style.display = 'block'; }
+      if (phoneInput) { phoneInput.style.borderColor = '#ff4466'; }
+    } else {
+      if (phoneErr) { phoneErr.style.display = 'none'; }
+      if (phoneInput) { phoneInput.style.borderColor = '#262640'; }
+    }
+  } else {
+    if (phoneErr) { phoneErr.style.display = 'none'; }
+    if (phoneInput) { phoneInput.style.borderColor = '#262640'; }
+  }
+
+  var ok = allFilled && phoneOk && state.ageChecked;
   var b = g('submitBtn');
   if (ok) { b.style.background = 'linear-gradient(135deg,var(--pink),var(--orange))'; b.style.color = '#fff'; b.style.cursor = 'pointer'; b.style.boxShadow = '0 4px 20px rgba(255,45,138,.2)'; }
   else { b.style.background = 'var(--border)'; b.style.color = 'var(--dim)'; b.style.cursor = 'not-allowed'; b.style.boxShadow = 'none'; }
@@ -441,22 +603,41 @@ function switchKjTab(t) {
 
 // ═══════ SINGER ACTIONS ═══════
 function submitSong() {
-  const n=g('fName').value.trim(),p=g('fPhone').value.trim(),s=g('fSong').value.trim(),a=g('fAuthor').value.trim();
+  var n=g('fName').value.trim(),p=g('fPhone').value.trim(),s=g('fSong').value.trim(),a=g('fAuthor').value.trim();
   if(!n||!p||!s||!a) return;
-  const id=Date.now().toString();
+  // Check age verification
+  if(!state.ageChecked){
+    var ce=g('ageError');if(ce)ce.style.display='block';
+    var cl=g('ageLabel');if(cl)cl.style.borderColor='#ff4466';
+    return;
+  }
+  // Validate phone
+  var phoneCheck = validatePhone(p);
+  if(!phoneCheck.valid) {
+    var phoneErr = g('phoneError');
+    if(phoneErr) { phoneErr.textContent = phoneCheck.msg; phoneErr.style.display = 'block'; }
+    g('fPhone').style.borderColor = '#ff4466';
+    return;
+  }
+  p = phoneCheck.digits;
+  var id=Date.now().toString();
   const entry={id,name:n,phone:p,song:s,author:a,time:new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),status:'waiting'};
   state.queue.push(entry);
   state.myId=id;
   fbSet('queue',arrToObj(state.queue));
   // ── Save to permanent customer log ──
-  const dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-  const existing=state.customers.find(c=>c.phone===p);
+  var dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  var region=getPhoneRegion(p);
+  var existing=state.customers.find(function(c){return c.phone===p;});
   if(existing){
     existing.name=n;existing.lastVisit=dateStr;existing.visits=(existing.visits||1)+1;
+    existing.region=region.label;existing.state=region.state;existing.isLocal=region.isLocal;
+    if(state.marketingChecked) existing.marketingConsent=true;
+    existing.ageVerified=true;
     existing.songs=existing.songs||[];existing.songs.push({song:s,author:a,date:dateStr});
     fbSet('customers',arrToObj(state.customers));
   } else {
-    const cust={id:'c'+id,name:n,phone:p,firstVisit:dateStr,lastVisit:dateStr,visits:1,songs:[{song:s,author:a,date:dateStr}]};
+    var cust={id:'c'+id,name:n,phone:p,firstVisit:dateStr,lastVisit:dateStr,visits:1,region:region.label,state:region.state,isLocal:region.isLocal,marketingConsent:state.marketingChecked,ageVerified:true,songs:[{song:s,author:a,date:dateStr}]};
     state.customers.push(cust);
     fbSet('customers',arrToObj(state.customers));
   }
@@ -478,7 +659,7 @@ function submitSong() {
   }
 }
 
-function resetSinger(){state.myId=null;state.returningCustomer=null;g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';state.selectedTip=null;state.customTip="";g('returningBanner').classList.add('hidden');g('phoneField').classList.remove('hidden');g('customerMatches').classList.add('hidden');if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}showView('singerWelcome');}
+function resetSinger(){state.myId=null;state.returningCustomer=null;state.ageChecked=false;state.marketingChecked=false;g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';state.selectedTip=null;state.customTip="";g('returningBanner').classList.add('hidden');g('phoneField').classList.remove('hidden');g('customerMatches').classList.add('hidden');if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}var ab=g('ageBox');if(ab){ab.style.background='transparent';ab.style.borderColor='#262640';ab.innerHTML='';}var al=g('ageLabel');if(al)al.style.borderColor='#262640';var ae=g('ageError');if(ae)ae.style.display='none';var mb=g('marketingBox');if(mb){mb.style.background='transparent';mb.style.borderColor='#262640';mb.innerHTML='';}var ml=g('marketingLabel');if(ml)ml.style.borderColor='#262640';showView('singerWelcome');}
 
 // ═══════ KJ ACTIONS ═══════
 function kjLoginCheck(){
@@ -711,6 +892,7 @@ function _render() {
   // Rules
   let ruH='';state.rules.forEach((r,i)=>{ruH+=`<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">${i+1}.</span><span>${h(r)}</span></div>`;});
   g('policyContent').innerHTML=ruH;
+  var cbn=g('consentBarName');if(cbn)cbn.textContent=state.bar.name;
 
   // ── Singer Done ──
   if(state.singerView==='singerDone'){
@@ -1020,24 +1202,38 @@ function renderKJ(){
       html+=`<div style="display:flex;gap:8px;margin-top:10px"><input class="s-input" id="newRule" placeholder="Add a new rule..." style="flex:1" onkeydown="if(event.key==='Enter')addNewRule()"><button onclick="addNewRule()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">+ Add</button></div>`;
     }
     else if(ms==='customers'){
-      const custs=state.customers;
-      const search=state.customerSearch.toLowerCase();
-      const filtered=search?custs.filter(c=>c.name.toLowerCase().includes(search)||c.phone.includes(search)):custs;
-      const sorted=[...filtered].sort((a,b)=>(b.visits||1)-(a.visits||1));
+      var custs=state.customers;
+      var search=state.customerSearch.toLowerCase();
+      var localCount=custs.filter(function(c){return c.isLocal;}).length;
+      var outCount=custs.length-localCount;
+      var filtered=search?custs.filter(function(c){
+        return c.name.toLowerCase().indexOf(search)>-1 || c.phone.indexOf(search)>-1 || (c.region||'').toLowerCase().indexOf(search)>-1 || (c.state||'').toLowerCase().indexOf(search)>-1;
+      }):custs;
+      var sorted=filtered.slice().sort(function(a,b){return (b.visits||1)-(a.visits||1);});
 
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0">📇 Customers (${custs.length})</h3><button onclick="exportCustomersCSV()" style="padding:6px 12px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 Export CSV</button></div>`;
+      html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0">📇 Customers (${custs.length})</h3><button onclick="exportCustomersCSV()" style="padding:6px 12px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 CSV</button></div>`;
 
-      html+=`<div style="margin-bottom:12px"><input class="s-input" placeholder="🔍 Search by name or phone..." value="${h(state.customerSearch)}" oninput="state.customerSearch=this.value;render()"></div>`;
+      // Stats bar
+      html+=`<div style="display:flex;gap:8px;margin-bottom:12px">`;
+      html+=`<div style="flex:1;background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:'Outfit';color:var(--green)">${localCount}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">🟢 Local</div></div>`;
+      html+=`<div style="flex:1;background:rgba(255,225,77,.06);border:1px solid rgba(255,225,77,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:'Outfit';color:var(--yellow)">${outCount}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">🟡 Out of State</div></div>`;
+      html+=`<div style="flex:1;background:rgba(66,133,244,.06);border:1px solid rgba(66,133,244,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:'Outfit';color:#4285F4">${custs.filter(function(c){return c.marketingConsent;}).length}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">✅ Opted In</div></div>`;
+      html+=`</div>`;
+
+      html+=`<div style="margin-bottom:12px"><input class="s-input" placeholder="🔍 Search name, phone, or state..." value="${h(state.customerSearch)}" oninput="state.customerSearch=this.value;render()"></div>`;
 
       if(!sorted.length){
         html+=`<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">📇</div><div style="color:var(--dim);font-size:13px">${search?'No customers match your search':'No customers yet — they appear when singers submit songs'}</div></div>`;
       } else {
-        sorted.forEach(c=>{
-          const songCount=c.songs?c.songs.length:1;
-          html+=`<div class="s-card" style="padding:14px 16px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="font-size:16px;font-weight:700;font-family:'Outfit'">${h(c.name)}</div><div style="font-size:13px;color:var(--dim);margin-top:2px">📱 ${h(c.phone)}</div><div style="display:flex;gap:12px;margin-top:8px"><div style="font-size:11px;color:var(--blue)"><span style="font-weight:800;font-size:14px">${c.visits||1}</span> visit${(c.visits||1)>1?'s':''}</div><div style="font-size:11px;color:var(--yellow)"><span style="font-weight:800;font-size:14px">${songCount}</span> song${songCount>1?'s':''}</div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">First: ${h(c.firstVisit||'—')} · Last: ${h(c.lastVisit||'—')}</div></div><button onclick="deleteCustomer('${c.id}')" style="padding:4px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div>`;
+        sorted.forEach(function(c){
+          var songCount=c.songs?c.songs.length:1;
+          var regionTag=c.region||'';
+          if(!regionTag&&c.phone){var rg=getPhoneRegion(c.phone.replace(/[^0-9]/g,''));regionTag=rg.label;}
+          var consentBadge=c.marketingConsent?'<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(57,255,115,.1);color:var(--green);font-weight:600">✅ Opted In</span>':'<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(255,68,102,.1);color:var(--red);font-weight:600">❌ No Consent</span>';
+          html+=`<div class="s-card" style="padding:14px 16px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:16px;font-weight:700;font-family:'Outfit'">${h(c.name)}</span><span style="font-size:10px;padding:3px 8px;border-radius:12px;background:${c.isLocal?'rgba(57,255,115,.1)':'rgba(255,225,77,.1)'};color:${c.isLocal?'var(--green)':'var(--yellow)'};font-weight:700">${h(regionTag)}</span>${consentBadge}</div><div style="font-size:13px;color:var(--dim);margin-top:2px">📱 ${h(c.phone)}</div><div style="display:flex;gap:12px;margin-top:8px"><div style="font-size:11px;color:var(--blue)"><span style="font-weight:800;font-size:14px">${c.visits||1}</span> visit${(c.visits||1)>1?'s':''}</div><div style="font-size:11px;color:var(--yellow)"><span style="font-weight:800;font-size:14px">${songCount}</span> song${songCount>1?'s':''}</div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">First: ${h(c.firstVisit||'—')} · Last: ${h(c.lastVisit||'—')}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${c.marketingConsent?'<button onclick="textForReview(\''+c.phone+'\',\''+h(c.name)+'\')" style="padding:4px 8px;background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.2);border-radius:6px;color:#4285F4;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📲 Review</button><button onclick="textPromo(\''+c.phone+'\',\''+h(c.name)+'\')" style="padding:4px 8px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);border-radius:6px;color:var(--orange);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📣 Promo</button>':''}<button onclick="deleteCustomer('${c.id}')" style="padding:4px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div></div>`;
           if(c.songs&&c.songs.length){
             html+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Song History</div>`;
-            c.songs.slice(-5).reverse().forEach(s=>{
+            c.songs.slice(-5).reverse().forEach(function(s){
               html+=`<div style="font-size:12px;color:var(--dim);margin-bottom:3px">🎵 <span style="color:var(--text)">${h(s.song)}</span> — ${h(s.author)} <span style="opacity:.5">(${h(s.date)})</span></div>`;
             });
             if(c.songs.length>5) html+=`<div style="font-size:11px;color:var(--dim);opacity:.5">...and ${c.songs.length-5} more</div>`;
@@ -1082,16 +1278,45 @@ function addTipAmount(){const v=prompt('Enter tip amount ($):');if(v&&!isNaN(v)&
 // ═══════ CUSTOMER ACTIONS ═══════
 function deleteCustomer(id){state.customers=state.customers.filter(c=>c.id!==id);fbSet('customers',arrToObj(state.customers));toast('Customer removed');}
 
+function textForReview(phone,name){
+  var barName=state.bar.name||"PEPE'S";
+  var r=state.reviews||{};
+  var reviewUrl='';
+  if(r.google&&r.google.enabled&&r.google.url) reviewUrl=r.google.url;
+  else if(r.yelp&&r.yelp.enabled&&r.yelp.url) reviewUrl=r.yelp.url;
+  else if(r.facebook&&r.facebook.enabled&&r.facebook.url) reviewUrl=r.facebook.url;
+  if(!reviewUrl){toast('Set up review links first in ⭐ Reviews');return;}
+  var msg='Hey '+name+'! 🎤 Thanks for singing with us at '+barName+'! We\'d love to hear about your experience. Could you leave us a quick review? It only takes 30 seconds!\n\n'+reviewUrl+'\n\nThank you! 🎶\n\nReply STOP to opt out.';
+  window.open('sms:'+phone+'?body='+encodeURIComponent(msg),'_blank');
+}
+
+function textPromo(phone,name){
+  var barName=state.bar.name||"PEPE'S";
+  var msg='Hey '+name+'! 🌶️ '+barName+' has something special this week!\n\n';
+  if(state.events.length){
+    state.events.forEach(function(ev){
+      msg+=ev.day+': '+ev.name+' — '+ev.detail+'\n';
+    });
+    msg+='\n';
+  }
+  if(state.offer.active){
+    msg+=state.offer.title+': '+state.offer.text+'\n\n';
+  }
+  msg+='See you at the mic! 🎤\n\nReply STOP to opt out.';
+  window.open('sms:'+phone+'?body='+encodeURIComponent(msg),'_blank');
+}
+
 function exportCustomersCSV(){
   if(!state.customers.length){toast('No customers to export');return;}
-  let csv='Name,Phone,Visits,First Visit,Last Visit,Songs\n';
-  state.customers.forEach(c=>{
-    const songs=c.songs?c.songs.map(s=>s.song+' by '+s.author).join(' | '):'';
-    csv+=`"${(c.name||'').replace(/"/g,'""')}","${c.phone}",${c.visits||1},"${c.firstVisit||''}","${c.lastVisit||''}","${songs.replace(/"/g,'""')}"\n`;
+  var csv='Name,Phone,Region,State,Local,Marketing Consent,Age 21+ Verified,Visits,First Visit,Last Visit,Songs\n';
+  state.customers.forEach(function(c){
+    var songs=c.songs?c.songs.map(function(s){return s.song+' by '+s.author;}).join(' | '):'';
+    var region=(c.region||'').replace(/🟢 |🟡 |🔴 /g,'');
+    csv+='"'+(c.name||'').replace(/"/g,'""')+'","'+c.phone+'","'+region+'","'+(c.state||'')+'","'+(c.isLocal?'Yes':'No')+'","'+(c.marketingConsent?'Yes':'No')+'","'+(c.ageVerified?'Yes':'No')+'",'+( c.visits||1)+',"'+(c.firstVisit||'')+'","'+(c.lastVisit||'')+'","'+songs.replace(/"/g,'""')+'"\n';
   });
-  const blob=new Blob([csv],{type:'text/csv'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
+  var blob=new Blob([csv],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
   a.href=url;a.download='pepes-customers-'+new Date().toISOString().slice(0,10)+'.csv';
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   URL.revokeObjectURL(url);
@@ -1099,7 +1324,7 @@ function exportCustomersCSV(){
 }
 
 function resetSingerToDisplay(){
-  state.myId=null;state.returningCustomer=null;
+  state.myId=null;state.returningCustomer=null;state.ageChecked=false;state.marketingChecked=false;
   var nameEl=document.getElementById('fName');if(nameEl)nameEl.value='';
   var phoneEl=document.getElementById('fPhone');if(phoneEl)phoneEl.value='';
   var songEl=document.getElementById('fSong');if(songEl)songEl.value='';
