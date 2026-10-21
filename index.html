@@ -66,6 +66,12 @@ input[type=number]{-moz-appearance:textfield}
 .setup-box h2{font-family:'Outfit',sans-serif;font-size:22px;font-weight:800;margin:10px 0}
 .setup-box p{color:var(--dim);font-size:13px;line-height:1.6;margin:8px 0}
 .setup-box code{background:var(--input);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--yellow)}
+/* ── UPDATE 5: Sticky submit button ── */
+#singerForm .s-card{padding-bottom:90px}
+#stickySubmitWrap{position:fixed;bottom:0;left:0;right:0;z-index:50;padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,var(--bg) 70%,transparent);pointer-events:none}
+#stickySubmitWrap button{pointer-events:auto;max-width:448px;margin:0 auto;display:block}
+/* ── Review gate overlay ── */
+#reviewGate{position:fixed;top:0;left:0;right:0;bottom:0;z-index:150;background:rgba(8,8,15,.97);display:flex;align-items:center;justify-content:center;padding:20px}
 </style>
 </head>
 <body>
@@ -119,7 +125,7 @@ input[type=number]{-moz-appearance:textfield}
         <div style="text-align:center"><div id="totalCount" style="font-size:26px;font-weight:900;font-family:'Outfit';color:var(--blue)">0</div><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">Total</div></div>
       </div>
 
-      <button onclick="showView('singerForm')" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;font-family:'Outfit';cursor:pointer;letter-spacing:1px;box-shadow:0 6px 24px rgba(255,45,138,.2);margin-bottom:16px">Join the Waitlist 🎶</button>
+      <button onclick="showBeenBefore()" style="width:100%;padding:16px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:800;font-family:'Outfit';cursor:pointer;letter-spacing:1px;box-shadow:0 6px 24px rgba(255,45,138,.2);margin-bottom:16px">Join the Waitlist 🎶</button>
 
       <!-- Compact tip -->
       <div id="welcomeTip" style="background:linear-gradient(135deg,rgba(255,215,0,.05),rgba(255,107,53,.03));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:14px 16px;margin-bottom:14px;text-align:center">
@@ -134,38 +140,82 @@ input[type=number]{-moz-appearance:textfield}
     </div>
   </div>
 
+  <!-- ═══════════ UPDATE 1: BEEN HERE BEFORE? ═══════════ -->
+  <div id="singerBeenBefore" class="hidden sl">
+    <button onclick="showView('singerWelcome')" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:10px 0;font-family:inherit">← Back</button>
+    <div class="s-card" style="text-align:center">
+      <div style="font-size:48px;margin-bottom:10px">🎤</div>
+      <h2 style="font-family:'Outfit';font-size:20px;font-weight:800;color:var(--green);margin:0 0 6px">Been here before?</h2>
+      <p style="font-size:13px;color:var(--dim);margin:0 0 20px">If you've sung with us, we can pull up your info!</p>
+      <div style="display:flex;gap:10px">
+        <button onclick="showLast4Lookup()" style="flex:1;padding:16px;background:linear-gradient(135deg,var(--green),var(--blue));color:#000;border:none;border-radius:12px;font-size:16px;font-weight:800;font-family:'Outfit';cursor:pointer;letter-spacing:1px">Yes! 🙌</button>
+        <button onclick="startNewCustomer()" style="flex:1;padding:16px;background:var(--input);border:1px solid var(--border);color:var(--text);border-radius:12px;font-size:16px;font-weight:800;font-family:'Outfit';cursor:pointer;letter-spacing:1px">Nope, first time!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ UPDATE 1b: LAST 4 DIGITS LOOKUP ═══════════ -->
+  <div id="singerLast4" class="hidden sl">
+    <button onclick="showView('singerBeenBefore')" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:10px 0;font-family:inherit">← Back</button>
+    <div class="s-card" style="text-align:center">
+      <div style="font-size:36px;margin-bottom:8px">📱</div>
+      <h2 style="font-family:'Outfit';font-size:18px;font-weight:800;color:var(--blue);margin:0 0 6px">Let's find you!</h2>
+      <p style="font-size:13px;color:var(--dim);margin:0 0 18px">Enter the <span style="color:var(--yellow);font-weight:700">last 4 digits</span> of your phone number</p>
+      <input class="s-input" id="last4Input" type="tel" maxlength="4" placeholder="e.g. 1234" style="font-size:28px;text-align:center;letter-spacing:10px;max-width:200px;margin:0 auto 14px;font-family:'Outfit';font-weight:800" oninput="searchByLast4()">
+      <div id="last4Matches" style="margin-top:10px"></div>
+      <div id="last4NoMatch" class="hidden" style="margin-top:14px">
+        <div style="font-size:13px;color:var(--dim);margin-bottom:12px">No match found. You might be new here!</div>
+        <button onclick="startNewCustomer()" style="padding:12px 24px;background:linear-gradient(135deg,var(--pink),var(--orange));color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Outfit'">Sign up as new 🎤</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══════════ SINGER: FORM ═══════════ -->
   <div id="singerForm" class="hidden sl">
-    <button onclick="showView('singerWelcome')" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:10px 0;font-family:inherit">← Back</button>
+    <button onclick="goBackFromForm()" style="background:none;border:none;color:var(--dim);font-size:13px;cursor:pointer;padding:10px 0;font-family:inherit">← Back</button>
     <div class="s-card">
       <h2 style="font-family:'Outfit';font-size:17px;font-weight:800;color:var(--green);margin:0 0 5px;letter-spacing:1px">🎵 Song Request</h2>
       <p style="font-size:12px;color:var(--dim);margin:0 0 18px">Fill out the form to get on stage</p>
-      <div style="margin-bottom:14px"><label class="s-label">👤 Your Name</label><input class="s-input" id="fName" type="text" placeholder="e.g. Maria" autocomplete="name" oninput="searchCustomer()"></div>
-      <div id="customerMatches" class="hidden" style="margin-top:-10px;margin-bottom:14px"></div>
+
+      <!-- Returning customer banner -->
       <div id="returningBanner" class="hidden" style="background:rgba(57,255,115,.07);border:1px solid rgba(57,255,115,.2);border-radius:10px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
         <div><div style="font-size:12px;color:var(--green);font-weight:700">✅ Welcome back!</div><div id="returningInfo" style="font-size:12px;color:var(--dim);margin-top:2px"></div></div>
         <button onclick="clearReturning()" style="background:none;border:1px solid var(--border);color:var(--dim);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Change</button>
       </div>
+
+      <!-- UPDATE 2: Song history for returning customers -->
+      <div id="songHistorySection" class="hidden" style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">🎵 Your Past Songs — tap to sing again!</div>
+        <div id="songHistoryList"></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--dim);margin-bottom:4px">Or pick a new song below 👇</div>
+        </div>
+      </div>
+
+      <div id="nameField" style="margin-bottom:14px"><label class="s-label">👤 Your Name</label><input class="s-input" id="fName" type="text" placeholder="e.g. Maria" autocomplete="name"></div>
       <div id="phoneField" style="margin-bottom:14px"><label class="s-label">📱 Phone Number</label><input class="s-input" id="fPhone" type="tel" placeholder="e.g. (555) 123-4567" autocomplete="tel"><div id="phoneError" style="display:none;color:#ff4466;font-size:11px;margin-top:5px;font-weight:600"></div></div>
       <div style="margin-bottom:14px"><label class="s-label">🎵 Song Title</label><input class="s-input" id="fSong" type="text" placeholder="e.g. Bohemian Rhapsody"></div>
       <div style="margin-bottom:14px"><label class="s-label">🎸 Artist</label><input class="s-input" id="fAuthor" type="text" placeholder="e.g. Queen"></div>
-      <!-- Age Verification (REQUIRED) -->
+
+      <!-- UPDATE 3: Age Verification — ALWAYS visible, starts ON -->
       <div style="margin-bottom:10px">
         <label onclick="toggleAge()" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px 14px;background:var(--input);border:1px solid var(--border);border-radius:10px;transition:border .2s" id="ageLabel">
-          <div id="ageBox" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:transparent"></div>
+          <div id="ageBox" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:var(--green)"><span style="color:#000;font-size:14px;font-weight:900">✓</span></div>
           <span style="font-size:12px;color:var(--dim);line-height:1.5">I confirm I am <span style="color:var(--yellow);font-weight:700">21 years or older</span> <span style="color:var(--red);font-size:10px;font-weight:700">REQUIRED</span></span>
         </label>
         <div id="ageError" style="display:none;color:#ff4466;font-size:11px;margin-top:5px;font-weight:600;padding-left:4px">☝️ You must be 21+ to sign up</div>
       </div>
 
-      <!-- Marketing Opt-In (OPTIONAL) -->
+      <!-- UPDATE 3: Marketing Opt-In — ALWAYS visible, starts ON (opt-out) -->
       <div style="margin-bottom:16px">
-        <label onclick="toggleMarketing()" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px 14px;background:var(--input);border:1px solid var(--border);border-radius:10px;transition:border .2s" id="marketingLabel">
-          <div id="marketingBox" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:transparent"></div>
+        <label onclick="toggleMarketing()" style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:12px 14px;background:var(--input);border:1px solid rgba(57,255,115,.3);border-radius:10px;transition:border .2s" id="marketingLabel">
+          <div id="marketingBox" style="width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s;background:var(--green)"><span style="color:#000;font-size:14px;font-weight:900">✓</span></div>
           <span style="font-size:12px;color:var(--dim);line-height:1.5">🎉 <span style="color:var(--green);font-weight:600">Yes!</span> Send me exclusive deals, event invites & offers from <span style="color:var(--text);font-weight:600" id="consentBarName">PEPE'S</span>. <span style="font-size:10px;opacity:.6">Optional · Unsubscribe anytime</span></span>
         </label>
       </div>
-      <button id="submitBtn" onclick="submitSong()" style="width:100%;padding:15px;background:var(--border);color:var(--dim);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;letter-spacing:1px;text-transform:uppercase;font-family:'Outfit';transition:all .2s">Submit Request 🎤</button>
+
+      <!-- spacer so content doesn't hide behind sticky button -->
+      <div style="height:10px"></div>
     </div>
     <div class="s-card" style="padding:0;overflow:hidden">
       <button onclick="togglePolicy()" style="width:100%;padding:13px 16px;display:flex;justify-content:space-between;align-items:center;background:none;border:none;color:var(--text);cursor:pointer;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-family:inherit">
@@ -173,6 +223,13 @@ input[type=number]{-moz-appearance:textfield}
       </button>
       <div id="policyContent" style="display:none;padding:0 16px 16px;font-size:12px;line-height:1.7;color:var(--dim)"></div>
     </div>
+    <!-- extra space below so scrolling reveals full rules above sticky button -->
+    <div style="height:80px"></div>
+  </div>
+
+  <!-- UPDATE 5: Sticky submit button (shown when singerForm is active) -->
+  <div id="stickySubmitWrap" class="hidden">
+    <button id="submitBtn" onclick="submitSong()" style="width:100%;padding:15px;background:var(--border);color:var(--dim);border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:not-allowed;letter-spacing:1px;text-transform:uppercase;font-family:'Outfit';transition:all .2s;box-shadow:0 -2px 12px rgba(0,0,0,.5)">Submit Request 🎤</button>
   </div>
 
   <!-- ═══════════ SINGER: CONFIRMED ═══════════ -->
@@ -248,6 +305,11 @@ input[type=number]{-moz-appearance:textfield}
 
 <div id="toastEl" class="toast hidden"></div>
 
+<!-- UPDATE 4: Review gate overlay (shown after 2nd/3rd song submit) -->
+<div id="reviewGate" class="hidden">
+  <div id="reviewGateContent" style="text-align:center;max-width:360px;width:100%"></div>
+</div>
+
 <!-- ═══════════ STAGE DISPLAY (Full Screen) ═══════════ -->
 <div id="stageDisplay" class="hidden" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#050508;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;overflow:hidden">
   <!-- Background effects -->
@@ -264,12 +326,8 @@ input[type=number]{-moz-appearance:textfield}
 <script>
 /* ═══════════════════════════════════════════════════════════
    🔥 FIREBASE CONFIG — PASTE YOUR CONFIG HERE
-   ═══════════════════════════════════════════════════════════
-   Go to: https://console.firebase.google.com
-   → Your project → Project Settings → General → Your apps
-   → Copy the firebaseConfig object and paste below
    ═══════════════════════════════════════════════════════════ */
-const firebaseConfig = {
+var firebaseConfig = {
   apiKey: "AIzaSyCb7O10C9qL4oGHl5_ZGAbWVmLht5QPSy8",
   authDomain: "pepes-karaoke-waitlist.firebaseapp.com",
   databaseURL: "https://pepes-karaoke-waitlist-default-rtdb.firebaseio.com",
@@ -279,6 +337,10 @@ const firebaseConfig = {
   appId: "1:212109120740:web:1840e8eb3842bcd20d08f1"
 };
 /* ═══════════════════════════════════════════════════════════ */
+
+// ── Google Place ID for Pepe's (for direct review link) ──
+var GOOGLE_PLACE_ID = 'ChIJE438_RKhlVQRr98Uccgxk7k';
+var GOOGLE_REVIEW_URL = 'https://search.google.com/local/writereview?placeid=' + GOOGLE_PLACE_ID;
 
 // ── Check if configured ──
 var isConfigured = firebaseConfig.apiKey && firebaseConfig.databaseURL;
@@ -290,14 +352,12 @@ try {
     db = firebase.database();
     document.getElementById('app').classList.remove('hidden');
   } else if (isConfigured && typeof firebase === 'undefined') {
-    // Firebase SDK failed to load (old browser / network issue)
     document.getElementById('app').classList.remove('hidden');
     isConfigured = false;
   } else {
     document.getElementById('setupScreen').classList.remove('hidden');
   }
 } catch(e) {
-  // If Firebase crashes, still show the app in offline mode
   document.getElementById('app').classList.remove('hidden');
   isConfigured = false;
 }
@@ -312,6 +372,8 @@ window.onerror = function(msg, url, line) {
 };
 
 var kioskTimer = null;
+var reviewGateTimer = null;
+var reviewGateSkipTimer = null;
 
 // ═══════ STATE ═══════
 var state = {
@@ -320,7 +382,7 @@ var state = {
   queue: [],
   myId: null,
   kjAuth: false,
-  bar: {name:"PEPE'S",tagline:"Karaoke Bar",address:"123 Main Street, Portland, OR 97201",phone:"(555) 123-4567",hours:"Tues–Sat · 7 PM – 2 AM",social:"@pepeskaraoke",kjPin:"1234",adminPin:"9999"},
+  bar: {name:"PEPE'S",tagline:"Karaoke Bar",address:"4908 SE Powell Blvd, Portland, OR 97206",phone:"(503) 914-3978",hours:"Tues–Sat · 4 PM – 2 AM",social:"@pepeskaraoke",kjPin:"1234",adminPin:"9999"},
   events: [
     {id:"1",day:"TUE",name:"Open Mic Night",detail:"$3 wells all night",color:"#39ff73"},
     {id:"2",day:"WED",name:"Ladies Night Karaoke",detail:"½ off margaritas",color:"#ff2d8a"},
@@ -330,11 +392,13 @@ var state = {
   offer: {emoji:"🍹",title:"SING & SIP SPECIAL",text:"Show this screen after your song for 10% off your next drink!",active:true},
   rules:["One song per turn — back of the line after.","Keep it fun & respectful on stage.","KJ's decision is final on song order.","No duplicate songs the same night.","Be ready when called — or lose your spot.","5 min limit per song. Duets = one slot.","Must be 21+. Valid ID required."],
   tips:{enabled:true,headline:"Tip Your KJ",subtitle:"Show some love — tips keep the music going! 🎶",amounts:[3,5,10,20],venmo:{enabled:true,handle:"pepesKJ"},cashapp:{enabled:true,handle:"$pepesKJ"},paypal:{enabled:true,handle:"pepesKJ"},customAmount:true},
-  reviews:{enabled:true,headline:"Enjoying Pepe's?",subtitle:"Leave us a review — it means the world! 🙏",google:{enabled:true,url:""},yelp:{enabled:true,url:""},facebook:{enabled:true,url:""}},
+  reviews:{enabled:true,headline:"Enjoying Pepe's?",subtitle:"Leave us a review — it means the world! 🙏",google:{enabled:true,url:GOOGLE_REVIEW_URL},yelp:{enabled:true,url:""},facebook:{enabled:true,url:""}},
   selectedTip:null,customTip:"",
   kjTab:'queue',mgmtSection:'events',
   customers:[],customerSearch:"",editingEvent:null,
-  returningCustomer:null,kioskMode:false,kjRole:null,ageChecked:false,marketingChecked:false,
+  returningCustomer:null,kioskMode:false,kjRole:null,
+  ageChecked:true,marketingChecked:true,
+  songsThisSession:{}
 };
 
 // ── Kiosk mode detection ──
@@ -343,63 +407,147 @@ if (window.location.search.indexOf('kiosk=1') > -1) {
   state.mode = 'singer';
 }
 
-// ═══════ RETURNING SINGER FUNCTIONS ═══════
-function searchCustomer() {
-  var name = g('fName').value.trim().toLowerCase();
-  var matchEl = g('customerMatches');
-  if (name.length < 2 || state.returningCustomer) {
-    matchEl.classList.add('hidden');
-    matchEl.innerHTML = '';
-    return;
-  }
-  var matches = state.customers.filter(function(c) {
-    return c.name.toLowerCase().indexOf(name) > -1;
-  }).slice(0, 4);
-
-  if (!matches.length) {
-    matchEl.classList.add('hidden');
-    matchEl.innerHTML = '';
-    return;
-  }
-
-  var html = '<div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:600">🎤 Been here before?</div>';
-  matches.forEach(function(c) {
-    var lastSong = c.songs && c.songs.length ? c.songs[c.songs.length - 1].song : '';
-    var phoneShort = c.phone.slice(-4);
-    html += '<button onclick="pickReturning(\'' + c.id + '\')" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:var(--input);border:1px solid var(--border);border-radius:8px;margin-bottom:5px;cursor:pointer;text-align:left;color:var(--text);font-family:inherit;transition:border .2s">';
-    html += '<div style="width:36px;height:36px;border-radius:18px;background:linear-gradient(135deg,var(--pink),var(--orange));display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎤</div>';
-    html += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700">' + h(c.name) + ' <span style="font-size:11px;color:var(--dim);font-weight:400">···' + h(phoneShort) + '</span></div>';
-    html += '<div style="font-size:11px;color:var(--dim)">' + (c.visits || 1) + ' visit' + ((c.visits || 1) > 1 ? 's' : '') + (lastSong ? ' · Last: ' + h(lastSong) : '') + '</div>';
-    html += '</div></div></button>';
-  });
-  matchEl.innerHTML = html;
-  matchEl.classList.remove('hidden');
+// ═══════ UPDATE 1: BEEN HERE BEFORE FLOW ═══════
+function showBeenBefore() {
+  state.singerView = 'singerBeenBefore';
+  showViewDirect('singerBeenBefore');
 }
 
+function showLast4Lookup() {
+  state.singerView = 'singerLast4';
+  showViewDirect('singerLast4');
+  var inp = g('last4Input');
+  if (inp) { inp.value = ''; inp.focus(); }
+  var matchEl = g('last4Matches');
+  if (matchEl) matchEl.innerHTML = '';
+  var noMatch = g('last4NoMatch');
+  if (noMatch) noMatch.classList.add('hidden');
+}
+
+function searchByLast4() {
+  var inp = g('last4Input');
+  var digits = inp.value.replace(/[^0-9]/g, '');
+  inp.value = digits;
+  var matchEl = g('last4Matches');
+  var noMatch = g('last4NoMatch');
+
+  if (digits.length < 4) {
+    matchEl.innerHTML = '';
+    noMatch.classList.add('hidden');
+    return;
+  }
+
+  var matches = state.customers.filter(function(c) {
+    var cDigits = (c.phone || '').replace(/[^0-9]/g, '');
+    return cDigits.length >= 4 && cDigits.slice(-4) === digits;
+  }).slice(0, 5);
+
+  if (!matches.length) {
+    matchEl.innerHTML = '';
+    noMatch.classList.remove('hidden');
+    return;
+  }
+
+  noMatch.classList.add('hidden');
+  var html = '<div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600">Found you! Tap your name:</div>';
+  matches.forEach(function(c) {
+    var lastSong = c.songs && c.songs.length ? c.songs[c.songs.length - 1].song : '';
+    html += '<button onclick="pickReturning(\'' + c.id + '\')" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.2);border-radius:10px;margin-bottom:6px;cursor:pointer;text-align:left;color:var(--text);font-family:inherit;transition:all .2s">';
+    html += '<div style="width:40px;height:40px;border-radius:20px;background:linear-gradient(135deg,var(--green),var(--blue));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🎤</div>';
+    html += '<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">' + h(c.name) + '</div>';
+    html += '<div style="font-size:12px;color:var(--dim)">' + (c.visits || 1) + ' visit' + ((c.visits || 1) > 1 ? 's' : '') + (lastSong ? ' · Last sang: ' + h(lastSong) : '') + '</div>';
+    html += '</div></button>';
+  });
+  matchEl.innerHTML = html;
+}
+
+function startNewCustomer() {
+  state.returningCustomer = null;
+  state.ageChecked = true;
+  state.marketingChecked = true;
+  initTogglesOn();
+  g('fName').value = '';
+  g('fPhone').value = '';
+  g('fSong').value = '';
+  g('fAuthor').value = '';
+  g('returningBanner').classList.add('hidden');
+  g('phoneField').classList.remove('hidden');
+  g('nameField').classList.remove('hidden');
+  g('songHistorySection').classList.add('hidden');
+  state.singerView = 'singerForm';
+  showViewDirect('singerForm');
+  g('fName').focus();
+  checkFormValid();
+}
+
+function goBackFromForm() {
+  g('stickySubmitWrap').classList.add('hidden');
+  showView('singerBeenBefore');
+}
+
+// ═══════ RETURNING SINGER FUNCTIONS ═══════
 function pickReturning(id) {
   var c = state.customers.find(function(cust) { return cust.id === id; });
   if (!c) return;
   state.returningCustomer = c;
   g('fName').value = c.name;
   g('fPhone').value = c.phone;
-  g('customerMatches').classList.add('hidden');
-  g('customerMatches').innerHTML = '';
   g('returningBanner').classList.remove('hidden');
-  g('returningInfo').textContent = '📱 ' + c.phone + ' · ' + (c.visits || 1) + ' visit' + ((c.visits || 1) > 1 ? 's' : '');
+  g('returningInfo').textContent = '📱 ···' + c.phone.slice(-4) + ' · ' + (c.visits || 1) + ' visit' + ((c.visits || 1) > 1 ? 's' : '');
   g('phoneField').classList.add('hidden');
-  var phoneErr=g('phoneError');if(phoneErr)phoneErr.style.display='none';
-  // Auto-check age for returning customers (already verified)
-  state.ageChecked=true;
-  var box=g('ageBox');if(box){box.style.background='var(--green)';box.style.borderColor='var(--green)';box.innerHTML='<span style="color:#000;font-size:14px;font-weight:900">✓</span>';}
-  var label=g('ageLabel');if(label)label.style.borderColor='rgba(57,255,115,.3)';
-  // Auto-check marketing if they opted in before
-  if(c.marketingConsent){
-    state.marketingChecked=true;
-    var mb=g('marketingBox');if(mb){mb.style.background='var(--green)';mb.style.borderColor='var(--green)';mb.innerHTML='<span style="color:#000;font-size:14px;font-weight:900">✓</span>';}
-    var ml=g('marketingLabel');if(ml)ml.style.borderColor='rgba(57,255,115,.3)';
+  g('nameField').classList.add('hidden');
+  var phoneErr = g('phoneError');
+  if (phoneErr) phoneErr.style.display = 'none';
+
+  // UPDATE 3: Always start both toggles ON
+  state.ageChecked = true;
+  state.marketingChecked = true;
+  initTogglesOn();
+
+  // UPDATE 2: Show song history
+  if (c.songs && c.songs.length) {
+    var histEl = g('songHistorySection');
+    var listEl = g('songHistoryList');
+    var histHtml = '';
+    var uniqueSongs = [];
+    var seen = {};
+    // Show unique songs, most recent first
+    for (var i = c.songs.length - 1; i >= 0; i--) {
+      var key = c.songs[i].song.toLowerCase() + '||' + c.songs[i].author.toLowerCase();
+      if (!seen[key]) {
+        seen[key] = true;
+        uniqueSongs.push(c.songs[i]);
+      }
+    }
+    uniqueSongs.slice(0, 6).forEach(function(s) {
+      histHtml += '<button onclick="pickPastSong(\'' + h(s.song).replace(/'/g, "\\'") + '\',\'' + h(s.author).replace(/'/g, "\\'") + '\')" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;background:rgba(255,225,77,.05);border:1px solid rgba(255,225,77,.15);border-radius:8px;margin-bottom:5px;cursor:pointer;text-align:left;color:var(--text);font-family:inherit;transition:all .2s">';
+      histHtml += '<div style="font-size:18px;flex-shrink:0">🎵</div>';
+      histHtml += '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + h(s.song) + '</div>';
+      histHtml += '<div style="font-size:11px;color:var(--yellow)">' + h(s.author) + '</div></div>';
+      histHtml += '<div style="font-size:11px;color:var(--green);font-weight:700;flex-shrink:0">Sing →</div>';
+      histHtml += '</button>';
+    });
+    listEl.innerHTML = histHtml;
+    histEl.classList.remove('hidden');
+  } else {
+    g('songHistorySection').classList.add('hidden');
   }
+
+  g('fSong').value = '';
+  g('fAuthor').value = '';
+  state.singerView = 'singerForm';
+  showViewDirect('singerForm');
   g('fSong').focus();
   checkFormValid();
+}
+
+function pickPastSong(song, author) {
+  g('fSong').value = song;
+  g('fAuthor').value = author;
+  checkFormValid();
+  // Scroll to submit area
+  var btn = g('submitBtn');
+  if (btn) btn.scrollIntoView({behavior:'smooth',block:'center'});
 }
 
 function clearReturning() {
@@ -407,9 +555,27 @@ function clearReturning() {
   g('fPhone').value = '';
   g('returningBanner').classList.add('hidden');
   g('phoneField').classList.remove('hidden');
+  g('nameField').classList.remove('hidden');
+  g('songHistorySection').classList.add('hidden');
   g('fName').value = '';
   g('fName').focus();
   checkFormValid();
+}
+
+// ── Helper: Set both toggles to ON visually ──
+function initTogglesOn() {
+  state.ageChecked = true;
+  state.marketingChecked = true;
+  var ab = g('ageBox');
+  if (ab) { ab.style.background = 'var(--green)'; ab.style.borderColor = 'var(--green)'; ab.innerHTML = '<span style="color:#000;font-size:14px;font-weight:900">✓</span>'; }
+  var al = g('ageLabel');
+  if (al) al.style.borderColor = 'rgba(57,255,115,.3)';
+  var ae = g('ageError');
+  if (ae) ae.style.display = 'none';
+  var mb = g('marketingBox');
+  if (mb) { mb.style.background = 'var(--green)'; mb.style.borderColor = 'var(--green)'; mb.innerHTML = '<span style="color:#000;font-size:14px;font-weight:900">✓</span>'; }
+  var ml = g('marketingLabel');
+  if (ml) ml.style.borderColor = 'rgba(57,255,115,.3)';
 }
 
 // Portland/Oregon/SW Washington local area codes
@@ -475,18 +641,12 @@ function getPhoneRegion(digits) {
 }
 
 function validatePhone(phone) {
-  // Strip everything except digits
   var digits = phone.replace(/[^0-9]/g, '');
-  // Must be 10 digits (US) or 11 starting with 1
   if (digits.length === 11 && digits[0] === '1') digits = digits.substring(1);
   if (digits.length !== 10) return { valid: false, msg: '📱 Must be 10 digits', digits: digits };
-  // Can't be all same digit (8888888888, 1111111111, etc)
   if (/^(\d)\1{9}$/.test(digits)) return { valid: false, msg: '❌ That doesn\'t look like a real number', digits: digits };
-  // Can't be sequential (1234567890, 0987654321)
   if (digits === '1234567890' || digits === '0987654321') return { valid: false, msg: '❌ Please enter your real phone number', digits: digits };
-  // Can't start with 0 or 1 (invalid US area codes)
   if (digits[0] === '0' || digits[0] === '1') return { valid: false, msg: '❌ Invalid area code', digits: digits };
-  // Can't have 555 as exchange (fake TV numbers) except 5550100-5550199
   if (digits.substring(3,6) === '555') return { valid: false, msg: '❌ Please enter your real phone number', digits: digits };
   return { valid: true, msg: '', digits: digits };
 }
@@ -529,11 +689,12 @@ function checkFormValid() {
   var author = g('fAuthor').value.trim();
   var phoneErr = g('phoneError');
   var phoneInput = g('fPhone');
-  var allFilled = name && phone && song && author;
+  // For returning customers, phone is pre-filled and hidden
+  var phoneHidden = g('phoneField').classList.contains('hidden');
+  var allFilled = name && (phone || phoneHidden) && song && author;
   var phoneOk = true;
 
-  // Validate phone if entered
-  if (phone) {
+  if (phone && !phoneHidden) {
     var result = validatePhone(phone);
     if (!result.valid) {
       phoneOk = false;
@@ -575,29 +736,41 @@ function fbSet(key, val) { if(isConfigured && db) { try { db.ref(key).set(val); 
 // ═══════ NAVIGATION ═══════
 function switchMode(m) {
   state.mode = m;
-  document.querySelectorAll('.nav-tabs .nav-tab').forEach((b,i)=>{b.className='nav-tab'+(i===(m==='singer'?0:1)?' active':'');});
+  var tabs = document.querySelectorAll('.nav-tabs .nav-tab');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].className = 'nav-tab' + (i === (m === 'singer' ? 0 : 1) ? ' active' : ''); }
   if (m==='singer') { state.singerView='singerWelcome'; }
   else { state.singerView=''; }
+  g('stickySubmitWrap').classList.add('hidden');
   render();
 }
 
 function showView(v) {
   state.singerView=v;
-  // Direct view toggle as immediate fallback
-  var views=['singerWelcome','singerForm','singerDone','singerTip'];
-  views.forEach(function(id){
-    var el=document.getElementById(id);
-    if(el){
-      if(id===v){el.classList.remove('hidden');el.style.display='';}
-      else{el.classList.add('hidden');}
-    }
-  });
+  showViewDirect(v);
   try{render();}catch(e){console.log('render error:',e);}
+}
+
+function showViewDirect(v) {
+  var views=['singerWelcome','singerBeenBefore','singerLast4','singerForm','singerDone','singerTip'];
+  for (var i = 0; i < views.length; i++) {
+    var el = document.getElementById(views[i]);
+    if (el) {
+      if (views[i] === v) { el.classList.remove('hidden'); el.style.display = ''; }
+      else { el.classList.add('hidden'); }
+    }
+  }
+  // Show/hide sticky submit button
+  var sticky = g('stickySubmitWrap');
+  if (sticky) {
+    if (v === 'singerForm') { sticky.classList.remove('hidden'); }
+    else { sticky.classList.add('hidden'); }
+  }
 }
 
 function switchKjTab(t) {
   state.kjTab=t;
-  document.querySelectorAll('#kjDash > div:first-child .nav-tab').forEach((b,i)=>{b.className='nav-tab'+(i===(t==='queue'?0:1)?' active':'');});
+  var tabs = document.querySelectorAll('#kjDash > div:first-child .nav-tab');
+  for (var i = 0; i < tabs.length; i++) { tabs[i].className = 'nav-tab' + (i === (t === 'queue' ? 0 : 1) ? ' active' : ''); }
   render();
 }
 
@@ -605,13 +778,11 @@ function switchKjTab(t) {
 function submitSong() {
   var n=g('fName').value.trim(),p=g('fPhone').value.trim(),s=g('fSong').value.trim(),a=g('fAuthor').value.trim();
   if(!n||!p||!s||!a) return;
-  // Check age verification
   if(!state.ageChecked){
     var ce=g('ageError');if(ce)ce.style.display='block';
     var cl=g('ageLabel');if(cl)cl.style.borderColor='#ff4466';
     return;
   }
-  // Validate phone
   var phoneCheck = validatePhone(p);
   if(!phoneCheck.valid) {
     var phoneErr = g('phoneError');
@@ -621,10 +792,11 @@ function submitSong() {
   }
   p = phoneCheck.digits;
   var id=Date.now().toString();
-  const entry={id,name:n,phone:p,song:s,author:a,time:new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),status:'waiting'};
+  var entry={id:id,name:n,phone:p,song:s,author:a,time:new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}),status:'waiting'};
   state.queue.push(entry);
   state.myId=id;
   fbSet('queue',arrToObj(state.queue));
+
   // ── Save to permanent customer log ──
   var dateStr=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
   var region=getPhoneRegion(p);
@@ -632,7 +804,8 @@ function submitSong() {
   if(existing){
     existing.name=n;existing.lastVisit=dateStr;existing.visits=(existing.visits||1)+1;
     existing.region=region.label;existing.state=region.state;existing.isLocal=region.isLocal;
-    if(state.marketingChecked) existing.marketingConsent=true;
+    // UPDATE 3: Always update marketing consent based on current toggle state
+    existing.marketingConsent=state.marketingChecked;
     existing.ageVerified=true;
     existing.songs=existing.songs||[];existing.songs.push({song:s,author:a,date:dateStr});
     fbSet('customers',arrToObj(state.customers));
@@ -641,8 +814,22 @@ function submitSong() {
     state.customers.push(cust);
     fbSet('customers',arrToObj(state.customers));
   }
+
+  // ── Track songs this session for review gate ──
+  if (!state.songsThisSession[p]) state.songsThisSession[p] = 0;
+  state.songsThisSession[p]++;
+  var songCount = state.songsThisSession[p];
+
   state.selectedTip=null;state.customTip="";
-  showView('singerDone');
+  g('stickySubmitWrap').classList.add('hidden');
+
+  // UPDATE 4: Show review gate on 2nd or 3rd song
+  if (songCount === 2 || songCount === 3) {
+    showReviewGate();
+  } else {
+    showView('singerDone');
+  }
+
   // Kiosk mode: auto-reset after 30 seconds
   if(state.kioskMode){
     if(kioskTimer)clearInterval(kioskTimer);
@@ -659,7 +846,78 @@ function submitSong() {
   }
 }
 
-function resetSinger(){state.myId=null;state.returningCustomer=null;state.ageChecked=false;state.marketingChecked=false;g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';state.selectedTip=null;state.customTip="";g('returningBanner').classList.add('hidden');g('phoneField').classList.remove('hidden');g('customerMatches').classList.add('hidden');if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}var ab=g('ageBox');if(ab){ab.style.background='transparent';ab.style.borderColor='#262640';ab.innerHTML='';}var al=g('ageLabel');if(al)al.style.borderColor='#262640';var ae=g('ageError');if(ae)ae.style.display='none';var mb=g('marketingBox');if(mb){mb.style.background='transparent';mb.style.borderColor='#262640';mb.innerHTML='';}var ml=g('marketingLabel');if(ml)ml.style.borderColor='#262640';showView('singerWelcome');}
+// ═══════ UPDATE 4: REVIEW GATE ═══════
+function showReviewGate() {
+  var gateEl = g('reviewGate');
+  var contentEl = g('reviewGateContent');
+  var html = '';
+
+  html += '<div style="background:var(--card);border:1px solid rgba(66,133,244,.3);border-radius:20px;padding:28px 24px;max-width:340px;margin:0 auto">';
+  html += '<div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:10px">';
+  for (var i = 0; i < 5; i++) {
+    html += '<span style="font-size:28px;display:inline-block;animation:starPop 0.4s ease ' + (0.1 * i) + 's both">⭐</span>';
+  }
+  html += '</div>';
+  html += '<style>@keyframes starPop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}</style>';
+
+  html += '<div style="font-family:\'Outfit\';font-size:22px;font-weight:900;color:#4285F4;margin-bottom:6px">Loving the vibes?</div>';
+  html += '<div style="font-size:14px;color:var(--dim);margin-bottom:20px;line-height:1.5">A quick review helps us keep the music going! 🎶</div>';
+
+  if (state.kioskMode) {
+    // KIOSK: Show QR code (customer scans with their phone)
+    var qrSrc = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=111120&color=ffffff&data=' + encodeURIComponent(GOOGLE_REVIEW_URL);
+    html += '<div style="font-size:14px;color:var(--text);font-weight:700;margin-bottom:12px">📱 Scan with your phone:</div>';
+    html += '<div style="background:#fff;border-radius:12px;padding:12px;display:inline-block;margin-bottom:12px"><img src="' + qrSrc + '" width="160" height="160" style="display:block"></div>';
+    html += '<div style="font-size:12px;color:var(--dim)">Point your phone camera at the QR code</div>';
+  } else {
+    // PHONE: Show tap button (they're already on their phone)
+    html += '<a href="' + h(GOOGLE_REVIEW_URL) + '" target="_blank" rel="noopener" onclick="closeReviewGate()" style="display:block;padding:16px 24px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:14px;font-size:17px;font-weight:800;cursor:pointer;font-family:\'Outfit\';text-decoration:none;letter-spacing:.5px;box-shadow:0 4px 16px rgba(66,133,244,.3);margin-bottom:12px">⭐ Leave a Quick Review</a>';
+    html += '<div style="font-size:12px;color:var(--dim);margin-bottom:4px">Opens Google Reviews — takes 30 seconds!</div>';
+  }
+
+  // Skip button (appears after 5 seconds)
+  html += '<div id="reviewGateSkip" style="margin-top:16px;opacity:0;transition:opacity .5s">';
+  html += '<button onclick="closeReviewGate()" style="padding:10px 20px;background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit">Skip</button>';
+  html += '</div>';
+
+  html += '</div>';
+
+  contentEl.innerHTML = html;
+  gateEl.classList.remove('hidden');
+
+  // Show skip button after 5 seconds
+  reviewGateSkipTimer = setTimeout(function() {
+    var skipEl = document.getElementById('reviewGateSkip');
+    if (skipEl) skipEl.style.opacity = '1';
+  }, 5000);
+
+  // Auto-close after 10 seconds
+  reviewGateTimer = setTimeout(function() {
+    closeReviewGate();
+  }, 10000);
+}
+
+function closeReviewGate() {
+  if (reviewGateTimer) { clearTimeout(reviewGateTimer); reviewGateTimer = null; }
+  if (reviewGateSkipTimer) { clearTimeout(reviewGateSkipTimer); reviewGateSkipTimer = null; }
+  g('reviewGate').classList.add('hidden');
+  showView('singerDone');
+}
+
+function resetSinger(){
+  state.myId=null;state.returningCustomer=null;
+  state.ageChecked=true;state.marketingChecked=true;
+  g('fName').value='';g('fPhone').value='';g('fSong').value='';g('fAuthor').value='';
+  state.selectedTip=null;state.customTip="";
+  g('returningBanner').classList.add('hidden');
+  g('phoneField').classList.remove('hidden');
+  g('nameField').classList.remove('hidden');
+  g('songHistorySection').classList.add('hidden');
+  g('stickySubmitWrap').classList.add('hidden');
+  if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}
+  initTogglesOn();
+  showView('singerWelcome');
+}
 
 // ═══════ KJ ACTIONS ═══════
 function kjLoginCheck(){
@@ -691,9 +949,26 @@ function selectRole(role){
 }
 
 function kjLock(){state.kjAuth=false;state.kjRole=null;g('pinInput').value='';render();}
-function nowSinging(id){state.queue=state.queue.map(s=>({...s,status:s.id===id?'singing':(s.status==='singing'?'waiting':s.status)}));fbSet('queue',arrToObj(state.queue));}
-function removeSinger(id){state.queue=state.queue.filter(s=>s.id!==id);fbSet('queue',arrToObj(state.queue));toast('Removed');}
-function moveQ(i,dir){const j=i+dir;if(j<0||j>=state.queue.length)return;const q=[...state.queue];[q[i],q[j]]=[q[j],q[i]];state.queue=q;fbSet('queue',arrToObj(state.queue));}
+function nowSinging(id){
+  var newQ = [];
+  for (var i = 0; i < state.queue.length; i++) {
+    var s = state.queue[i];
+    var newStatus = s.id === id ? 'singing' : (s.status === 'singing' ? 'waiting' : s.status);
+    var copy = {};
+    for (var k in s) { copy[k] = s[k]; }
+    copy.status = newStatus;
+    newQ.push(copy);
+  }
+  state.queue = newQ;
+  fbSet('queue', arrToObj(state.queue));
+}
+function removeSinger(id){state.queue=state.queue.filter(function(s){return s.id!==id;});fbSet('queue',arrToObj(state.queue));toast('Removed');}
+function moveQ(i,dir){
+  var j=i+dir;if(j<0||j>=state.queue.length)return;
+  var q=state.queue.slice();
+  var tmp=q[i];q[i]=q[j];q[j]=tmp;
+  state.queue=q;fbSet('queue',arrToObj(state.queue));
+}
 function clearQueue(){state.queue=[];fbSet('queue',null);toast('Queue cleared');}
 
 // ═══════ MGMT ACTIONS ═══════
@@ -714,63 +989,45 @@ function printReviewQR(){
   if(r.google&&r.google.enabled&&r.google.url)platforms.push({label:'Google',url:r.google.url,icon:'⭐',color:'#4285F4'});
   if(r.yelp&&r.yelp.enabled&&r.yelp.url)platforms.push({label:'Yelp',url:r.yelp.url,icon:'🔴',color:'#FF1A1A'});
   if(r.facebook&&r.facebook.enabled&&r.facebook.url)platforms.push({label:'Facebook',url:r.facebook.url,icon:'👍',color:'#1877F2'});
-
   if(!platforms.length){toast('Add review links first!');return;}
-
   var barName=state.bar.name||"PEPE'S";
   var printHtml='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Review QR Codes</title>';
   printHtml+='<style>body{font-family:Arial,sans-serif;text-align:center;padding:40px 20px;background:#fff;color:#000}';
   printHtml+='.card{display:inline-block;border:2px solid #ddd;border-radius:16px;padding:30px 24px;margin:16px;text-align:center;page-break-inside:avoid;max-width:320px;vertical-align:top}';
-  printHtml+='.card img{margin:16px 0}';
-  printHtml+='.bar-name{font-size:28px;font-weight:900;margin-bottom:4px}';
-  printHtml+='.tagline{font-size:14px;color:#666;margin-bottom:30px}';
-  printHtml+='.platform{font-size:20px;font-weight:800;margin-bottom:4px}';
-  printHtml+='.hint{font-size:12px;color:#888;margin-top:8px}';
-  printHtml+='.footer{margin-top:40px;font-size:11px;color:#aaa}';
+  printHtml+='.card img{margin:16px 0}.bar-name{font-size:28px;font-weight:900;margin-bottom:4px}';
+  printHtml+='.tagline{font-size:14px;color:#666;margin-bottom:30px}.platform{font-size:20px;font-weight:800;margin-bottom:4px}';
+  printHtml+='.hint{font-size:12px;color:#888;margin-top:8px}.footer{margin-top:40px;font-size:11px;color:#aaa}';
   printHtml+='@media print{body{padding:20px}.card{border:2px solid #ccc}}</style></head><body>';
-
   printHtml+='<div style="font-size:36px;margin-bottom:4px">🌶️🎤</div>';
   printHtml+='<div class="bar-name">'+barName+'</div>';
   printHtml+='<div class="tagline">Leave us a review! ⭐⭐⭐⭐⭐</div>';
-
   platforms.forEach(function(p){
     var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(p.url);
-    printHtml+='<div class="card">';
-    printHtml+='<div style="font-size:32px;margin-bottom:4px">'+p.icon+'</div>';
+    printHtml+='<div class="card"><div style="font-size:32px;margin-bottom:4px">'+p.icon+'</div>';
     printHtml+='<div class="platform" style="color:'+p.color+'">Review us on '+p.label+'</div>';
     printHtml+='<img src="'+qrUrl+'" width="200" height="200" alt="QR Code">';
-    printHtml+='<div class="hint">Scan with your phone camera</div>';
-    printHtml+='</div>';
+    printHtml+='<div class="hint">Scan with your phone camera</div></div>';
   });
-
-  // Also add QR for the waitlist app itself
   var appUrl=window.location.href;
   var appQr='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(appUrl);
-  printHtml+='<div class="card">';
-  printHtml+='<div style="font-size:32px;margin-bottom:4px">🎤</div>';
+  printHtml+='<div class="card"><div style="font-size:32px;margin-bottom:4px">🎤</div>';
   printHtml+='<div class="platform" style="color:#ff2d8a">Join the Karaoke Waitlist</div>';
   printHtml+='<img src="'+appQr+'" width="200" height="200" alt="QR Code">';
-  printHtml+='<div class="hint">Scan to sign up for your song</div>';
-  printHtml+='</div>';
-
-  printHtml+='<div class="footer">'+barName+' · '+(state.bar.address||'')+'</div>';
-  printHtml+='</body></html>';
-
+  printHtml+='<div class="hint">Scan to sign up for your song</div></div>';
+  printHtml+='<div class="footer">'+barName+' · '+(state.bar.address||'')+'</div></body></html>';
   var printWin=window.open('','_blank');
-  printWin.document.write(printHtml);
-  printWin.document.close();
+  printWin.document.write(printHtml);printWin.document.close();
   setTimeout(function(){printWin.print();},1000);
 }
 function saveTips(){fbSet('tips',state.tips);toast('Tips saved');}
-function deleteEvent(id){state.events=state.events.filter(e=>e.id!==id);saveEvents();}
+function deleteEvent(id){state.events=state.events.filter(function(e){return e.id!==id;});saveEvents();}
 function deleteRule(i){state.rules.splice(i,1);saveRules();}
-function moveRule(i,dir){const j=i+dir;if(j<0||j>=state.rules.length)return;[state.rules[i],state.rules[j]]=[state.rules[j],state.rules[i]];saveRules();}
+function moveRule(i,dir){var j=i+dir;if(j<0||j>=state.rules.length)return;var tmp=state.rules[i];state.rules[i]=state.rules[j];state.rules[j]=tmp;saveRules();}
 
 function togglePolicy(){
   var pc=document.getElementById('policyContent');
   var arrow=document.getElementById('policyArrow');
   if(!pc) return;
-  // Populate rules if empty
   if(!pc.innerHTML || pc.innerHTML.length < 10){
     var ruH='';
     for(var i=0;i<state.rules.length;i++){
@@ -778,10 +1035,8 @@ function togglePolicy(){
     }
     pc.innerHTML=ruH;
   }
-  // Toggle visibility using style directly
   if(pc.style.display==='none' || pc.style.display===''){
-    pc.style.display='block';
-    pc.className='fi';
+    pc.style.display='block';pc.className='fi';
     if(arrow) arrow.style.transform='rotate(180deg)';
   } else {
     pc.style.display='none';
@@ -793,20 +1048,20 @@ function togglePolicy(){
 function selectTip(amt){state.selectedTip=state.selectedTip===amt?null:amt;if(amt!=='custom')state.customTip="";render();}
 function setCustomTip(v){state.customTip=v;render();}
 function openTipLink(platform){
-  const amt=state.selectedTip==='custom'?(parseFloat(state.customTip)||0):state.selectedTip;
+  var amt=state.selectedTip==='custom'?(parseFloat(state.customTip)||0):state.selectedTip;
   if(!amt)return;
-  const note=encodeURIComponent('🎤 KJ Tip at '+state.bar.name);
-  const t=state.tips;let url='';
-  if(platform==='venmo')url=`https://venmo.com/${t.venmo.handle}?txn=pay&amount=${amt}&note=${note}`;
-  else if(platform==='cashapp'){const h=t.cashapp.handle.replace(/^\$/,'');url=`https://cash.app/$${h}/${amt}`;}
-  else if(platform==='paypal')url=`https://paypal.me/${t.paypal.handle}/${amt}`;
+  var note=encodeURIComponent('🎤 KJ Tip at '+state.bar.name);
+  var t=state.tips;var url='';
+  if(platform==='venmo')url='https://venmo.com/'+t.venmo.handle+'?txn=pay&amount='+amt+'&note='+note;
+  else if(platform==='cashapp'){var hh=t.cashapp.handle.replace(/^\$/,'');url='https://cash.app/$'+hh+'/'+amt;}
+  else if(platform==='paypal')url='https://paypal.me/'+t.paypal.handle+'/'+amt;
   if(url)window.open(url,'_blank');
 }
 
 // ═══════ HELPERS ═══════
 function g(id){return document.getElementById(id);}
-function arrToObj(arr){const o={};arr.forEach((item,i)=>{o[item.id||i]=item;});return o;}
-function toast(m){const t=g('toastEl');t.textContent='✅ '+m;t.classList.remove('hidden');setTimeout(()=>t.classList.add('hidden'),2000);}
+function arrToObj(arr){var o={};for(var i=0;i<arr.length;i++){o[arr[i].id||i]=arr[i];}return o;}
+function toast(m){var t=g('toastEl');t.textContent='✅ '+m;t.classList.remove('hidden');setTimeout(function(){t.classList.add('hidden');},2000);}
 function h(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ═══════ FORM VALIDATION ═══════
@@ -823,11 +1078,16 @@ function render() {
   try { _render(); } catch(e) { console.log('Render error:', e); }
 }
 function _render() {
-  var q=state.queue, cs=q.find(function(s){return s.status==='singing';}), wc=q.filter(function(s){return s.status==='waiting';}).length;
+  var q=state.queue;
+  var cs=null;
+  var wc=0;
+  for(var i=0;i<q.length;i++){
+    if(q[i].status==='singing') cs=q[i];
+    if(q[i].status==='waiting') wc++;
+  }
 
   // Nav
   g('navName').textContent=state.bar.name;
-  // Update nav tab active states
   var navTabs=document.querySelectorAll('.nav-tabs .nav-tab');
   if(navTabs.length>=2){
     navTabs[0].className='nav-tab'+(state.mode==='singer'?' active':'');
@@ -837,10 +1097,9 @@ function _render() {
   // Hide KJ tab in kiosk mode
   var kjTabBtn=document.querySelectorAll('.nav-tabs .nav-tab')[1];
   if(kjTabBtn && state.kioskMode){kjTabBtn.style.display='none';}
-  // Hide entire tab bar in kiosk mode (customers don't need it)
   var tabBar=document.querySelector('.nav-tabs');
   if(tabBar && state.kioskMode){tabBar.style.display='none';}
-  if(state.kioskMode){state.mode='singer';} // force singer mode
+  if(state.kioskMode){state.mode='singer';}
 
   // In kiosk mode, swap welcome tip for QR version
   var welcomeTipEl=g('welcomeTip');
@@ -850,12 +1109,21 @@ function _render() {
   }
 
   // Views
-  const singerViews=['singerWelcome','singerForm','singerDone','singerTip'];
-  const kjViews=['kjLogin','kjDash'];
-  singerViews.forEach(v=>{const el=g(v);if(el)el.classList.toggle('hidden',state.mode!=='singer'||state.singerView!==v);});
+  var singerViews=['singerWelcome','singerBeenBefore','singerLast4','singerForm','singerDone','singerTip'];
+  for(var vi=0;vi<singerViews.length;vi++){
+    var vel=g(singerViews[vi]);
+    if(vel) vel.classList.toggle('hidden',state.mode!=='singer'||state.singerView!==singerViews[vi]);
+  }
   g('kjLogin').classList.toggle('hidden',state.mode!=='kj'||state.kjAuth);
   g('kjDash').classList.toggle('hidden',state.mode!=='kj'||!state.kjAuth);
   g('singerFooter').classList.toggle('hidden',state.mode!=='singer');
+
+  // Show/hide sticky submit
+  var sticky=g('stickySubmitWrap');
+  if(sticky){
+    if(state.mode==='singer'&&state.singerView==='singerForm') sticky.classList.remove('hidden');
+    else sticky.classList.add('hidden');
+  }
 
   // ── Singer Welcome ──
   g('welcomeTitle').textContent='Welcome to '+state.bar.name;
@@ -866,46 +1134,53 @@ function _render() {
   if(cs){g('nowSingingBanner').classList.remove('hidden');g('nowSingingName').textContent=cs.name;g('nowSingingInfo').textContent=cs.song+' — '+cs.author;}
   else g('nowSingingBanner').classList.add('hidden');
 
-  // Tips - kiosk only (QR codes for customer phones)
+  // Tips - kiosk only
   g('welcomeTip').classList.toggle('hidden',!state.tips.enabled || !state.kioskMode);
   g('welcomeTipTitle').textContent=state.tips.headline||'Tip Your KJ';
 
-  // Events - show on both (just info)
+  // Events
   var evH='';
   if(state.events.length){
     evH='<div style="margin-top:10px;background:rgba(255,45,138,.03);border:1px solid rgba(255,45,138,.1);border-radius:14px;padding:16px;text-align:left"><div style="font-size:12px;font-weight:700;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px">🔥 Events</div>';
-    state.events.forEach(function(ev){evH+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;padding:7px 10px;background:'+ev.color+'08;border-radius:8px"><span style="font-weight:900;font-size:11px;color:'+ev.color+';min-width:28px;font-family:\'Outfit\'">'+h(ev.day)+'</span><div><div style="font-weight:700;font-size:13px">'+h(ev.name)+'</div><div style="font-size:11px;color:var(--dim)">'+h(ev.detail)+'</div></div></div>';});
+    for(var ei=0;ei<state.events.length;ei++){
+      var ev=state.events[ei];
+      evH+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;padding:7px 10px;background:'+ev.color+'08;border-radius:8px"><span style="font-weight:900;font-size:11px;color:'+ev.color+';min-width:28px;font-family:\'Outfit\'">'+h(ev.day)+'</span><div><div style="font-weight:700;font-size:13px">'+h(ev.name)+'</div><div style="font-size:11px;color:var(--dim)">'+h(ev.detail)+'</div></div></div>';
+    }
     evH+='</div>';
   }
   g('eventsSection').innerHTML=evH;
 
-  // Offer - show on both (just promo info)
+  // Offer
   var ofH='';
   if(state.offer.active){
     ofH='<div style="margin-top:14px;background:rgba(255,225,77,.05);border:1px dashed rgba(255,225,77,.27);border-radius:12px;padding:14px 18px;text-align:center"><div style="font-size:20px;margin-bottom:2px">'+h(state.offer.emoji)+'</div><div style="font-size:14px;font-weight:800;color:var(--yellow);font-family:\'Outfit\'">'+h(state.offer.title)+'</div><div style="font-size:13px;color:var(--dim);margin-top:4px">'+h(state.offer.text)+'</div></div>';
   }
   g('offerSection').innerHTML=ofH;
 
-  // Reviews - kiosk only (QR codes for customer phones)
+  // Reviews - kiosk only
   g('reviewWelcome').innerHTML=state.kioskMode?renderReviewCard(true):'';
 
   // Rules
-  let ruH='';state.rules.forEach((r,i)=>{ruH+=`<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">${i+1}.</span><span>${h(r)}</span></div>`;});
+  var ruH='';
+  for(var ri=0;ri<state.rules.length;ri++){
+    ruH+='<div style="display:flex;gap:7px;margin-bottom:5px"><span style="color:var(--yellow);font-weight:700;min-width:16px">'+(ri+1)+'.</span><span>'+h(state.rules[ri])+'</span></div>';
+  }
   g('policyContent').innerHTML=ruH;
   var cbn=g('consentBarName');if(cbn)cbn.textContent=state.bar.name;
 
   // ── Singer Done ──
   if(state.singerView==='singerDone'){
-    const pos=state.myId?q.findIndex(s=>s.id===state.myId):-1;
-    let posH='';
+    var pos=state.myId?-1:-1;
+    for(var pi=0;pi<q.length;pi++){if(q[pi].id===state.myId){pos=pi;break;}}
+    var posH='';
     if(pos>=0){
-      const isSinging=q[pos]&&q[pos].status==='singing';
-      posH=`<div style="background:rgba(77,225,255,.06);border:1px solid rgba(77,225,255,.2);border-radius:14px;padding:18px;margin-bottom:16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--blue);font-weight:700;margin-bottom:3px">Your Position</div><div style="font-size:48px;font-weight:900;font-family:'Outfit'">${isSinging?'🎙️':'#'+(pos+1)}</div><div style="font-size:13px;color:var(--dim)">${isSinging?"You're up NOW!":pos===0?"You're next!":pos+' ahead of you'}</div></div>`;
+      var isSinging=q[pos]&&q[pos].status==='singing';
+      posH='<div style="background:rgba(77,225,255,.06);border:1px solid rgba(77,225,255,.2);border-radius:14px;padding:18px;margin-bottom:16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--blue);font-weight:700;margin-bottom:3px">Your Position</div><div style="font-size:48px;font-weight:900;font-family:\'Outfit\'">'+(isSinging?'🎙️':'#'+(pos+1))+'</div><div style="font-size:13px;color:var(--dim)">'+(isSinging?"You're up NOW!":pos===0?"You're next!":pos+' ahead of you')+'</div></div>';
     } else if(state.myId){
-      posH=`<div style="background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.2);border-radius:14px;padding:18px;margin-bottom:16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--green);font-weight:700">✅ Complete!</div><div style="font-size:14px;color:var(--dim);margin-top:6px">Great job up there! 🎶</div></div>`;
+      posH='<div style="background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.2);border-radius:14px;padding:18px;margin-bottom:16px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--green);font-weight:700">✅ Complete!</div><div style="font-size:14px;color:var(--dim);margin-top:6px">Great job up there! 🎶</div></div>';
     }
     g('positionCard').innerHTML=posH;
-    g('songSummary').innerHTML=`<div style="font-size:11px;color:var(--dim)">${h(g('fName').value)} · ${h(g('fPhone').value)}</div><div style="font-size:16px;font-weight:800;font-family:'Outfit';margin-top:3px">🎵 ${h(g('fSong').value)}</div><div style="font-size:13px;color:var(--yellow);margin-top:2px">by ${h(g('fAuthor').value)}</div>`;
+    g('songSummary').innerHTML='<div style="font-size:11px;color:var(--dim)">'+h(g('fName').value)+' · '+h(g('fPhone').value)+'</div><div style="font-size:16px;font-weight:800;font-family:\'Outfit\';margin-top:3px">🎵 '+h(g('fSong').value)+'</div><div style="font-size:13px;color:var(--yellow);margin-top:2px">by '+h(g('fAuthor').value)+'</div>';
     g('tipFull').innerHTML=state.kioskMode?renderKioskTipQR():'';
 
     // Kiosk mode: show review QR + countdown
@@ -916,24 +1191,20 @@ function _render() {
       if(r.google&&r.google.enabled&&r.google.url)reviewUrl=r.google.url;
       else if(r.yelp&&r.yelp.enabled&&r.yelp.url)reviewUrl=r.yelp.url;
       else if(r.facebook&&r.facebook.enabled&&r.facebook.url)reviewUrl=r.facebook.url;
-
       if(reviewUrl){
         var qrSrc='https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=111120&color=ffffff&data='+encodeURIComponent(reviewUrl);
         kioskReviewH+='<div style="background:linear-gradient(135deg,rgba(66,133,244,.08),rgba(52,168,83,.05));border:1px solid rgba(66,133,244,.2);border-radius:16px;padding:22px 20px;margin-bottom:16px;text-align:center">';
         kioskReviewH+='<div style="display:flex;align-items:center;justify-content:center;gap:3px;margin-bottom:6px"><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span><span style="font-size:22px">⭐</span></div>';
-        kioskReviewH+='<div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:#4285F4;margin-bottom:4px">'+ h(r.headline||'Enjoyed your experience?')+'</div>';
+        kioskReviewH+='<div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:#4285F4;margin-bottom:4px">'+ h((r.headline||'Enjoyed your experience?'))+'</div>';
         kioskReviewH+='<div style="font-size:13px;color:var(--dim);margin-bottom:14px">Scan with your phone to leave a review!</div>';
         kioskReviewH+='<div style="background:#fff;border-radius:12px;padding:12px;display:inline-block"><img src="'+qrSrc+'" width="180" height="180" style="display:block"></div>';
         kioskReviewH+='<div style="font-size:12px;color:var(--dim);margin-top:10px">Point your phone camera at the QR code</div>';
         kioskReviewH+='</div>';
       }
-
-      // Countdown + auto-reset message
       kioskReviewH+='<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;margin-bottom:16px;text-align:center">';
       kioskReviewH+='<div style="font-size:12px;color:var(--dim)">This screen resets in</div>';
       kioskReviewH+='<div style="font-family:\'Outfit\';font-size:32px;font-weight:900;color:var(--blue);margin:4px 0" id="kioskCountdown">'+(state.kioskCountdown||30)+'</div>';
-      kioskReviewH+='<div style="font-size:12px;color:var(--dim)">seconds</div>';
-      kioskReviewH+='</div>';
+      kioskReviewH+='<div style="font-size:12px;color:var(--dim)">seconds</div></div>';
     }
     g('reviewDone').innerHTML=state.kioskMode?kioskReviewH:'';
   }
@@ -942,19 +1213,17 @@ function _render() {
   if(state.singerView==='singerTip') g('tipPageContent').innerHTML=renderTipCard(false);
 
   // ── Footer ──
-  g('footerInfo').innerHTML=`📍 ${h(state.bar.address)}<br>📞 ${h(state.bar.phone)}<br>🕘 ${h(state.bar.hours)}`;
+  g('footerInfo').innerHTML='📍 '+h(state.bar.address)+'<br>📞 '+h(state.bar.phone)+'<br>🕘 '+h(state.bar.hours);
   g('footerSocial').textContent=state.bar.social;
   g('footerCopy').textContent='© 2026 '+state.bar.name;
 
   // ── KJ Queue ──
   if(state.kjAuth) {
-    // Role indicator
-    var ri=g('roleIndicator');
-    if(ri){
-      if(state.kjRole==='admin'){ri.style.background='rgba(180,77,255,.12)';ri.style.color='#b44dff';ri.style.border='1px solid rgba(180,77,255,.3)';ri.textContent='🔑 Admin Mode';}
-      else{ri.style.background='rgba(77,225,255,.1)';ri.style.color='#4de1ff';ri.style.border='1px solid rgba(77,225,255,.25)';ri.textContent='🎧 KJ Mode';}
+    var ri2=g('roleIndicator');
+    if(ri2){
+      if(state.kjRole==='admin'){ri2.style.background='rgba(180,77,255,.12)';ri2.style.color='#b44dff';ri2.style.border='1px solid rgba(180,77,255,.3)';ri2.textContent='🔑 Admin Mode';}
+      else{ri2.style.background='rgba(77,225,255,.1)';ri2.style.color='#4de1ff';ri2.style.border='1px solid rgba(77,225,255,.25)';ri2.textContent='🎧 KJ Mode';}
     }
-    // Hide manage tab for KJ
     var mBtn=g('manageTabBtn');
     if(mBtn){
       if(state.kjRole==='admin'){mBtn.style.display='block';}
@@ -966,32 +1235,27 @@ function _render() {
 
 function renderTipCard(compact){
   if(!state.tips.enabled)return'';
-  const t=state.tips,amt=state.selectedTip==='custom'?(parseFloat(state.customTip)||0):state.selectedTip;
-  let html=`<div style="background:linear-gradient(135deg,rgba(255,215,0,.05),rgba(255,107,53,.03));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:20px 18px;margin-bottom:20px;text-align:center"><div style="font-size:32px;margin-bottom:6px">💰</div><div style="font-family:'Outfit';font-size:18px;font-weight:800;color:var(--gold);margin-bottom:2px">${h(t.headline)}</div><p style="font-size:13px;color:var(--dim);margin:0 0 16px;line-height:1.5">${h(t.subtitle)}</p>`;
-
-  // Amounts
+  var t=state.tips,amt=state.selectedTip==='custom'?(parseFloat(state.customTip)||0):state.selectedTip;
+  var html='<div style="background:linear-gradient(135deg,rgba(255,215,0,.05),rgba(255,107,53,.03));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:20px 18px;margin-bottom:20px;text-align:center"><div style="font-size:32px;margin-bottom:6px">💰</div><div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:var(--gold);margin-bottom:2px">'+h(t.headline)+'</div><p style="font-size:13px;color:var(--dim);margin:0 0 16px;line-height:1.5">'+h(t.subtitle)+'</p>';
   html+='<div style="display:flex;gap:8px;justify-content:center;margin-bottom:12px;flex-wrap:wrap">';
-  t.amounts.forEach(a=>{
-    const sel=state.selectedTip===a;
-    html+=`<button onclick="selectTip(${a})" style="padding:10px 0;width:60px;background:${sel?'linear-gradient(135deg,var(--gold),var(--orange))':'var(--input)'};border:1px solid ${sel?'var(--gold)':'var(--border)'};border-radius:10px;color:${sel?'#000':'var(--text)'};font-size:16px;font-weight:800;cursor:pointer;font-family:'Outfit';transition:all .2s;box-shadow:${sel?'0 4px 16px rgba(255,215,0,.2)':'none'}">$${a}</button>`;
-  });
+  for(var ai=0;ai<t.amounts.length;ai++){
+    var a=t.amounts[ai];
+    var sel=state.selectedTip===a;
+    html+='<button onclick="selectTip('+a+')" style="padding:10px 0;width:60px;background:'+(sel?'linear-gradient(135deg,var(--gold),var(--orange))':'var(--input)')+';border:1px solid '+(sel?'var(--gold)':'var(--border)')+';border-radius:10px;color:'+(sel?'#000':'var(--text)')+';font-size:16px;font-weight:800;cursor:pointer;font-family:\'Outfit\';transition:all .2s;box-shadow:'+(sel?'0 4px 16px rgba(255,215,0,.2)':'none')+'">$'+a+'</button>';
+  }
   if(t.customAmount){
-    const sel=state.selectedTip==='custom';
-    html+=`<button onclick="selectTip('custom')" style="padding:10px 0;width:60px;background:${sel?'linear-gradient(135deg,var(--gold),var(--orange))':'var(--input)'};border:1px solid ${sel?'var(--gold)':'var(--border)'};border-radius:10px;color:${sel?'#000':'var(--dim)'};font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Other</button>`;
+    var sel2=state.selectedTip==='custom';
+    html+='<button onclick="selectTip(\'custom\')" style="padding:10px 0;width:60px;background:'+(sel2?'linear-gradient(135deg,var(--gold),var(--orange))':'var(--input)')+';border:1px solid '+(sel2?'var(--gold)':'var(--border)')+';border-radius:10px;color:'+(sel2?'#000':'var(--dim)')+';font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">Other</button>';
   }
   html+='</div>';
-
-  // Custom input
   if(state.selectedTip==='custom'){
-    html+=`<div style="margin:0 auto 12px;max-width:160px;position:relative"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gold);font-weight:800;font-size:18px">$</span><input class="s-input" type="number" placeholder="0" value="${h(state.customTip)}" min="1" oninput="setCustomTip(this.value)" style="padding-left:32px;font-size:20px;font-weight:800;text-align:center;font-family:'Outfit'"></div>`;
+    html+='<div style="margin:0 auto 12px;max-width:160px;position:relative"><span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gold);font-weight:800;font-size:18px">$</span><input class="s-input" type="number" placeholder="0" value="'+h(state.customTip)+'" min="1" oninput="setCustomTip(this.value)" style="padding-left:32px;font-size:20px;font-weight:800;text-align:center;font-family:\'Outfit\'"></div>';
   }
-
-  // Payment buttons
   if(state.selectedTip!==null&&amt>0){
-    html+=`<div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:600">Send $${amt} via</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">`;
-    if(t.venmo.enabled)html+=`<button onclick="openTipLink('venmo')" style="padding:10px 18px;background:rgba(0,140,255,.09);border:1px solid rgba(0,140,255,.27);border-radius:10px;color:#008CFF;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💜 Venmo</button>`;
-    if(t.cashapp.enabled)html+=`<button onclick="openTipLink('cashapp')" style="padding:10px 18px;background:rgba(0,214,50,.09);border:1px solid rgba(0,214,50,.27);border-radius:10px;color:#00D632;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💚 Cash App</button>`;
-    if(t.paypal.enabled)html+=`<button onclick="openTipLink('paypal')" style="padding:10px 18px;background:rgba(0,112,186,.09);border:1px solid rgba(0,112,186,.27);border-radius:10px;color:#0070BA;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💙 PayPal</button>`;
+    html+='<div style="font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:600">Send $'+amt+' via</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
+    if(t.venmo.enabled)html+='<button onclick="openTipLink(\'venmo\')" style="padding:10px 18px;background:rgba(0,140,255,.09);border:1px solid rgba(0,140,255,.27);border-radius:10px;color:#008CFF;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💜 Venmo</button>';
+    if(t.cashapp.enabled)html+='<button onclick="openTipLink(\'cashapp\')" style="padding:10px 18px;background:rgba(0,214,50,.09);border:1px solid rgba(0,214,50,.27);border-radius:10px;color:#00D632;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💚 Cash App</button>';
+    if(t.paypal.enabled)html+='<button onclick="openTipLink(\'paypal\')" style="padding:10px 18px;background:rgba(0,112,186,.09);border:1px solid rgba(0,112,186,.27);border-radius:10px;color:#0070BA;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">💙 PayPal</button>';
     html+='</div>';
   } else if(state.selectedTip===null){
     html+='<div style="font-size:12px;color:var(--dim);margin-top:4px">Select an amount above ☝️</div>';
@@ -1003,35 +1267,23 @@ function renderTipCard(compact){
 function renderKioskTipQR(compact){
   var t=state.tips;
   if(!t||!t.enabled)return'';
-
   var platforms=[];
-  if(t.venmo&&t.venmo.enabled&&t.venmo.handle){
-    platforms.push({label:'Venmo',icon:'💜',color:'#008CFF',url:'https://venmo.com/'+t.venmo.handle});
-  }
-  if(t.cashapp&&t.cashapp.enabled&&t.cashapp.handle){
-    var tag=t.cashapp.handle.replace(/^\$/,'');
-    platforms.push({label:'Cash App',icon:'💚',color:'#00D632',url:'https://cash.app/$'+tag});
-  }
-  if(t.paypal&&t.paypal.enabled&&t.paypal.handle){
-    platforms.push({label:'PayPal',icon:'💙',color:'#0070BA',url:'https://paypal.me/'+t.paypal.handle});
-  }
+  if(t.venmo&&t.venmo.enabled&&t.venmo.handle) platforms.push({label:'Venmo',icon:'💜',color:'#008CFF',url:'https://venmo.com/'+t.venmo.handle});
+  if(t.cashapp&&t.cashapp.enabled&&t.cashapp.handle){var tag=t.cashapp.handle.replace(/^\$/,'');platforms.push({label:'Cash App',icon:'💚',color:'#00D632',url:'https://cash.app/$'+tag});}
+  if(t.paypal&&t.paypal.enabled&&t.paypal.handle) platforms.push({label:'PayPal',icon:'💙',color:'#0070BA',url:'https://paypal.me/'+t.paypal.handle});
   if(!platforms.length)return'';
-
   var html='<div style="background:linear-gradient(135deg,rgba(255,215,0,.06),rgba(255,107,53,.04));border:1px solid rgba(255,215,0,.2);border-radius:14px;padding:'+(compact?'16px':'22px 20px')+';margin-bottom:'+(compact?'14':'18')+'px;text-align:center">';
   html+='<div style="font-size:'+(compact?'24':'32')+'px;margin-bottom:'+(compact?'4':'6')+'px">💰</div>';
   html+='<div style="font-family:\'Outfit\';font-size:'+(compact?'15':'18')+'px;font-weight:800;color:var(--gold);margin-bottom:2px">'+ h(t.headline||'Tip Your KJ')+'</div>';
   if(!compact)html+='<p style="font-size:13px;color:var(--dim);margin:0 0 4px;line-height:1.4">'+ h(t.subtitle||'')+'</p>';
   html+='<div style="font-size:12px;color:var(--dim);margin-bottom:14px">Scan with your phone to tip</div>';
-
-  // QR codes for each platform
   html+='<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">';
-  platforms.forEach(function(p){
+  for(var pi=0;pi<platforms.length;pi++){
+    var p=platforms[pi];
     var qrSrc='https://api.qrserver.com/v1/create-qr-code/?size=140x140&bgcolor=111120&color=ffffff&data='+encodeURIComponent(p.url);
-    html+='<div style="text-align:center">';
-    html+='<div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin-bottom:6px"><img src="'+qrSrc+'" width="'+(compact?'100':'120')+'" height="'+(compact?'100':'120')+'" style="display:block"></div>';
-    html+='<div style="font-size:12px;font-weight:700;color:'+p.color+'">'+p.icon+' '+p.label+'</div>';
-    html+='</div>';
-  });
+    html+='<div style="text-align:center"><div style="background:#fff;border-radius:10px;padding:8px;display:inline-block;margin-bottom:6px"><img src="'+qrSrc+'" width="'+(compact?'100':'120')+'" height="'+(compact?'100':'120')+'" style="display:block"></div>';
+    html+='<div style="font-size:12px;font-weight:700;color:'+p.color+'">'+p.icon+' '+p.label+'</div></div>';
+  }
   html+='</div></div>';
   return html;
 }
@@ -1044,244 +1296,223 @@ function renderReviewCard(compact){
   if(r.yelp&&r.yelp.enabled&&r.yelp.url)platforms.push({key:'yelp',label:'Yelp',icon:'🟥',color:'#FF1A1A',url:r.yelp.url});
   if(r.facebook&&r.facebook.enabled&&r.facebook.url)platforms.push({key:'facebook',label:'Facebook',icon:'👍',color:'#1877F2',url:r.facebook.url});
   if(!platforms.length)return'';
-
   if(compact){
-    // ── Compact: subtle bar on welcome screen ──
     var html='<div style="background:linear-gradient(135deg,rgba(66,133,244,.05),rgba(52,168,83,.04));border:1px solid rgba(66,133,244,.15);border-radius:12px;padding:12px 16px;margin-bottom:14px;text-align:center">';
     html+='<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:4px"><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span><span style="font-size:18px">⭐</span></div>';
     html+='<div style="font-size:13px;font-weight:700;color:#4285F4;margin-bottom:6px">'+ h(r.headline||'Love Pepe\'s?') +'</div>';
     html+='<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">';
-    platforms.forEach(function(p){
+    for(var pi=0;pi<platforms.length;pi++){
+      var p=platforms[pi];
       html+='<a href="'+h(p.url)+'" target="_blank" rel="noopener" style="padding:6px 12px;background:'+p.color+'12;border:1px solid '+p.color+'28;border-radius:8px;color:'+p.color+';font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;gap:4px">'+p.icon+' '+p.label+'</a>';
-    });
+    }
     html+='</div></div>';
     return html;
   }
-
-  // ── Full: after song submission ──
-  var html='<div style="background:linear-gradient(135deg,rgba(66,133,244,.06),rgba(52,168,83,.04));border:1px solid rgba(66,133,244,.18);border-radius:14px;padding:22px 20px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden">';
-
-  // Stars header with glow
-  html+='<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px">';
-  for(var i=0;i<5;i++){
-    html+='<span style="font-size:28px;display:inline-block;animation:starPop 0.4s ease '+(0.1*i)+'s both">⭐</span>';
+  var html2='<div style="background:linear-gradient(135deg,rgba(66,133,244,.06),rgba(52,168,83,.04));border:1px solid rgba(66,133,244,.18);border-radius:14px;padding:22px 20px;margin-bottom:20px;text-align:center;position:relative;overflow:hidden">';
+  html2+='<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:8px">';
+  for(var si=0;si<5;si++){html2+='<span style="font-size:28px;display:inline-block;animation:starPop 0.4s ease '+(0.1*si)+'s both">⭐</span>';}
+  html2+='</div>';
+  html2+='<style>@keyframes starPop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}</style>';
+  html2+='<div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:#4285F4;margin-bottom:3px">'+ h(r.headline||'Enjoying Pepe\'s?')+'</div>';
+  html2+='<p style="font-size:13px;color:var(--dim);margin:0 0 16px;line-height:1.5">'+ h(r.subtitle||'')+'</p>';
+  html2+='<div style="display:flex;flex-direction:column;gap:8px;max-width:280px;margin:0 auto">';
+  for(var pi2=0;pi2<platforms.length;pi2++){
+    var p2=platforms[pi2];
+    var isGoogle=p2.key==='google';
+    html2+='<a href="'+h(p2.url)+'" target="_blank" rel="noopener" style="padding:14px 18px;background:'+(isGoogle?'linear-gradient(135deg,#4285F4,#34A853)':p2.color+'15')+';border:1px solid '+p2.color+(isGoogle?'':'33')+';border-radius:12px;color:'+(isGoogle?'#fff':p2.color)+';font-size:15px;font-weight:800;cursor:pointer;font-family:\'Outfit\';text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s;letter-spacing:.5px'+(isGoogle?';box-shadow:0 4px 16px rgba(66,133,244,.3)':'')+'">';
+    html2+=p2.icon+' Review on '+p2.label;
+    if(isGoogle)html2+=' →';
+    html2+='</a>';
   }
-  html+='</div>';
-  html+='<style>@keyframes starPop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}</style>';
-
-  html+='<div style="font-family:\'Outfit\';font-size:18px;font-weight:800;color:#4285F4;margin-bottom:3px">'+ h(r.headline||'Enjoying Pepe\'s?')+'</div>';
-  html+='<p style="font-size:13px;color:var(--dim);margin:0 0 16px;line-height:1.5">'+ h(r.subtitle||'')+'</p>';
-
-  // Review buttons — larger, more prominent
-  html+='<div style="display:flex;flex-direction:column;gap:8px;max-width:280px;margin:0 auto">';
-  platforms.forEach(function(p){
-    var isGoogle=p.key==='google';
-    html+='<a href="'+h(p.url)+'" target="_blank" rel="noopener" style="padding:14px 18px;background:'+(isGoogle?'linear-gradient(135deg,#4285F4,#34A853)':p.color+'15')+';border:1px solid '+p.color+(isGoogle?'':'33')+';border-radius:12px;color:'+(isGoogle?'#fff':p.color)+';font-size:15px;font-weight:800;cursor:pointer;font-family:\'Outfit\';text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s;letter-spacing:.5px'+(isGoogle?';box-shadow:0 4px 16px rgba(66,133,244,.3)':'')+'">';
-    html+=p.icon+' Review on '+p.label;
-    if(isGoogle)html+=' →';
-    html+='</a>';
-  });
-  html+='</div>';
-
-  html+='<div style="font-size:11px;color:var(--dim);margin-top:12px;opacity:.6">Takes 30 seconds · Opens in a new tab</div>';
-  html+='</div>';
-  return html;
+  html2+='</div>';
+  html2+='<div style="font-size:11px;color:var(--dim);margin-top:12px;opacity:.6">Takes 30 seconds · Opens in a new tab</div></div>';
+  return html2;
 }
 
 function renderKJ(){
-  const q=state.queue,cs=q.find(s=>s.status==='singing'),wc=q.filter(s=>s.status==='waiting').length;
-  const qEl=g('kjQueue'),mEl=g('kjManage');
+  var q=state.queue;
+  var cs=null;var wc=0;
+  for(var i=0;i<q.length;i++){if(q[i].status==='singing')cs=q[i];if(q[i].status==='waiting')wc++;}
+  var qEl=g('kjQueue'),mEl=g('kjManage');
   qEl.classList.toggle('hidden',state.kjTab!=='queue');
   mEl.classList.toggle('hidden',state.kjTab!=='manage');
 
   if(state.kjTab==='queue'){
-    let html=`<div style="display:flex;gap:8px;margin-bottom:14px">${[{n:q.length,l:'Total',c:'var(--blue)'},{n:wc,l:'Waiting',c:'var(--yellow)'},{n:q.filter(s=>s.status==='singing').length,l:'On Stage',c:'var(--green)'}].map(({n,l,c})=>`<div style="flex:1;background:${c.replace(')',',0.05)')};border:1px solid ${c.replace(')',',0.13)')};border-radius:10px;padding:10px 6px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:'Outfit';color:${c}">${n}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">${l}</div></div>`).join('')}</div>`;
+    var html='<div style="display:flex;gap:8px;margin-bottom:14px">';
+    var stats=[{n:q.length,l:'Total',c:'var(--blue)'},{n:wc,l:'Waiting',c:'var(--yellow)'},{n:q.filter(function(s){return s.status==='singing';}).length,l:'On Stage',c:'var(--green)'}];
+    for(var si=0;si<stats.length;si++){
+      var st=stats[si];
+      html+='<div style="flex:1;background:'+st.c.replace(')',',0.05)')+';border:1px solid '+st.c.replace(')',',0.13)')+';border-radius:10px;padding:10px 6px;text-align:center"><div style="font-size:22px;font-weight:900;font-family:\'Outfit\';color:'+st.c+'">'+st.n+'</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px">'+st.l+'</div></div>';
+    }
+    html+='</div>';
 
-    if(cs){html+=`<div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.27);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--singing);font-weight:700">🎙️ Now Singing</div><div style="font-size:16px;font-weight:800;font-family:'Outfit';margin-top:2px">${h(cs.name)}</div><div style="font-size:13px;color:var(--dim)">${h(cs.song)} — ${h(cs.author)}</div><div style="font-size:11px;color:var(--dim);margin-top:1px">📱 ${h(cs.phone)}</div></div><button onclick="removeSinger('${cs.id}')" style="padding:8px 14px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.27);border-radius:8px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Done ✓</button></div>`;}
+    if(cs){html+='<div style="background:rgba(255,107,53,.08);border:1px solid rgba(255,107,53,.27);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--singing);font-weight:700">🎙️ Now Singing</div><div style="font-size:16px;font-weight:800;font-family:\'Outfit\';margin-top:2px">'+h(cs.name)+'</div><div style="font-size:13px;color:var(--dim)">'+h(cs.song)+' — '+h(cs.author)+'</div><div style="font-size:11px;color:var(--dim);margin-top:1px">📱 '+h(cs.phone)+'</div></div><button onclick="removeSinger(\''+cs.id+'\')" style="padding:8px 14px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.27);border-radius:8px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Done ✓</button></div>';}
 
-    html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0">Queue</h3>${q.length?`<button onclick="clearQueue()" style="background:rgba(255,68,102,.09);border:1px solid rgba(255,68,102,.2);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit">Clear All</button>`:''}</div>`;
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0">Queue</h3>'+(q.length?'<button onclick="clearQueue()" style="background:rgba(255,68,102,.09);border:1px solid rgba(255,68,102,.2);border-radius:8px;color:var(--red);font-size:11px;font-weight:600;padding:5px 10px;cursor:pointer;font-family:inherit">Clear All</button>':'')+'</div>';
 
-    if(!q.length){html+=`<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">🦗</div><div style="color:var(--dim);font-size:13px">No one in line yet</div></div>`;}
-    else{q.forEach((s,i)=>{
-      html+=`<div style="background:${s.status==='singing'?'rgba(255,107,53,.06)':'var(--card)'};border:1px solid ${s.status==='singing'?'rgba(255,107,53,.27)':'var(--border)'};border-radius:12px;padding:12px 14px;margin-bottom:7px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-family:'Outfit';font-weight:900;font-size:16px;color:${s.status==='singing'?'var(--singing)':'var(--dim)'};min-width:26px">${s.status==='singing'?'🎙️':'#'+(i+1)}</span><div style="flex:1"><div style="font-size:15px;font-weight:700;font-family:'Outfit'">${h(s.name)}</div><div style="font-size:11px;color:var(--dim)">📱 ${h(s.phone)} · ⏰ ${h(s.time)}</div></div></div><div style="margin-left:34px;margin-bottom:8px"><div style="font-size:14px;font-weight:600">🎵 ${h(s.song)}</div><div style="font-size:12px;color:var(--yellow)">by ${h(s.author)}</div></div><div style="display:flex;gap:5px;margin-left:34px;flex-wrap:wrap">${s.status!=='singing'?`<button onclick="nowSinging('${s.id}')" style="padding:5px 10px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:7px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🎙️ Sing</button>`:''}<button onclick="moveQ(${i},-1)" ${i===0?'disabled':''} style="padding:5px 8px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:7px;color:${i===0?'var(--dim)':'var(--blue)'};font-size:11px;cursor:${i===0?'default':'pointer'};font-family:inherit;opacity:${i===0?.4:1}">↑</button><button onclick="moveQ(${i},1)" ${i>=q.length-1?'disabled':''} style="padding:5px 8px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:7px;color:${i>=q.length-1?'var(--dim)':'var(--blue)'};font-size:11px;cursor:${i>=q.length-1?'default':'pointer'};font-family:inherit;opacity:${i>=q.length-1?.4:1}">↓</button><button onclick="removeSinger('${s.id}')" style="padding:5px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-family:inherit;margin-left:auto">✕</button></div></div>`;
-    });}
+    if(!q.length){html+='<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">🦗</div><div style="color:var(--dim);font-size:13px">No one in line yet</div></div>';}
+    else{
+      for(var qi=0;qi<q.length;qi++){
+        var s=q[qi];
+        html+='<div style="background:'+(s.status==='singing'?'rgba(255,107,53,.06)':'var(--card)')+';border:1px solid '+(s.status==='singing'?'rgba(255,107,53,.27)':'var(--border)')+';border-radius:12px;padding:12px 14px;margin-bottom:7px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-family:\'Outfit\';font-weight:900;font-size:16px;color:'+(s.status==='singing'?'var(--singing)':'var(--dim)')+';min-width:26px">'+(s.status==='singing'?'🎙️':'#'+(qi+1))+'</span><div style="flex:1"><div style="font-size:15px;font-weight:700;font-family:\'Outfit\'">'+h(s.name)+'</div><div style="font-size:11px;color:var(--dim)">📱 '+h(s.phone)+' · ⏰ '+h(s.time)+'</div></div></div><div style="margin-left:34px;margin-bottom:8px"><div style="font-size:14px;font-weight:600">🎵 '+h(s.song)+'</div><div style="font-size:12px;color:var(--yellow)">by '+h(s.author)+'</div></div><div style="display:flex;gap:5px;margin-left:34px;flex-wrap:wrap">'+(s.status!=='singing'?'<button onclick="nowSinging(\''+s.id+'\')" style="padding:5px 10px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:7px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🎙️ Sing</button>':'')+'<button onclick="moveQ('+qi+',-1)" '+(qi===0?'disabled':'')+' style="padding:5px 8px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:7px;color:'+(qi===0?'var(--dim)':'var(--blue)')+';font-size:11px;cursor:'+(qi===0?'default':'pointer')+';font-family:inherit;opacity:'+(qi===0?.4:1)+'">↑</button><button onclick="moveQ('+qi+',1)" '+(qi>=q.length-1?'disabled':'')+' style="padding:5px 8px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:7px;color:'+(qi>=q.length-1?'var(--dim)':'var(--blue)')+';font-size:11px;cursor:'+(qi>=q.length-1?'default':'pointer')+';font-family:inherit;opacity:'+(qi>=q.length-1?.4:1)+'">↓</button><button onclick="removeSinger(\''+s.id+'\')" style="padding:5px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:7px;color:var(--red);font-size:11px;cursor:pointer;font-family:inherit;margin-left:auto">✕</button></div></div>';
+      }
+    }
     qEl.innerHTML=html;
   }
 
   if(state.kjTab==='manage'){
-    const ms=state.mgmtSection;
-    let html=`<div style="display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap">${[['events','🗓 Events'],['offer','🍹 Offer'],['tips','💰 Tips'],['reviews','⭐ Reviews'],['rules','📜 Rules'],['customers','📇 Customers'],['barinfo','🏠 Bar Info']].map(([s,l])=>`<button onclick="state.mgmtSection='${s}';render()" class="pill ${ms===s?'active':''}">${l}</button>`).join('')}</div>`;
+    var ms=state.mgmtSection;
+    var html2='<div style="display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap">';
+    var mgmtTabs=[['events','🗓 Events'],['offer','🍹 Offer'],['tips','💰 Tips'],['reviews','⭐ Reviews'],['rules','📜 Rules'],['customers','📇 Customers'],['barinfo','🏠 Bar Info']];
+    for(var mi=0;mi<mgmtTabs.length;mi++){
+      html2+='<button onclick="state.mgmtSection=\''+mgmtTabs[mi][0]+'\';render()" class="pill '+(ms===mgmtTabs[mi][0]?'active':'')+'">'+mgmtTabs[mi][1]+'</button>';
+    }
+    html2+='</div>';
 
     if(ms==='events'){
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0">🗓 Events</h3><button onclick="addNewEvent()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">+ Add New</button></div>';
-
-      if(!state.events.length){
-        html+='<div style="text-align:center;padding:30px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:32px;margin-bottom:6px">🗓</div><div style="color:var(--dim);font-size:13px">No events yet — tap + Add New above</div></div>';
+      html2+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0">🗓 Events</h3><button onclick="addNewEvent()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">+ Add New</button></div>';
+      if(!state.events.length){html2+='<div style="text-align:center;padding:30px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:32px;margin-bottom:6px">🗓</div><div style="color:var(--dim);font-size:13px">No events yet — tap + Add New above</div></div>';}
+      for(var ei2=0;ei2<state.events.length;ei2++){
+        var ev2=state.events[ei2];
+        html2+='<div class="s-card" style="padding:12px 14px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><span style="font-weight:900;font-size:12px;color:'+ev2.color+';min-width:32px;font-family:\'Outfit\';background:'+ev2.color+'15;padding:4px 8px;border-radius:6px;text-align:center">'+h(ev2.day)+'</span><div><div style="font-weight:700;font-size:14px">'+h(ev2.name)+'</div><div style="font-size:12px;color:var(--dim)">'+h(ev2.detail)+'</div></div></div><div style="display:flex;gap:4px"><button onclick="moveEvent('+ei2+',-1)" '+(ei2===0?'disabled':'')+' style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:'+(ei2===0?'var(--dim)':'var(--blue)')+';font-size:10px;cursor:'+(ei2===0?'default':'pointer')+';font-family:inherit;opacity:'+(ei2===0?.4:1)+'">↑</button><button onclick="moveEvent('+ei2+',1)" '+(ei2>=state.events.length-1?'disabled':'')+' style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:'+(ei2>=state.events.length-1?'var(--dim)':'var(--blue)')+';font-size:10px;cursor:'+(ei2>=state.events.length-1?'default':'pointer')+';font-family:inherit;opacity:'+(ei2>=state.events.length-1?.4:1)+'">↓</button><button onclick="editEvent(\''+ev2.id+'\')" style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:var(--blue);font-size:10px;cursor:pointer;font-family:inherit">✏️</button><button onclick="deleteEvent(\''+ev2.id+'\')" style="padding:4px 7px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div></div></div>';
       }
-
-      state.events.forEach((ev,i)=>{
-        html+=`<div class="s-card" style="padding:12px 14px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><span style="font-weight:900;font-size:12px;color:${ev.color};min-width:32px;font-family:'Outfit';background:${ev.color}15;padding:4px 8px;border-radius:6px;text-align:center">${h(ev.day)}</span><div><div style="font-weight:700;font-size:14px">${h(ev.name)}</div><div style="font-size:12px;color:var(--dim)">${h(ev.detail)}</div></div></div><div style="display:flex;gap:4px"><button onclick="moveEvent(${i},-1)" ${i===0?'disabled':''} style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:${i===0?'var(--dim)':'var(--blue)'};font-size:10px;cursor:${i===0?'default':'pointer'};font-family:inherit;opacity:${i===0?.4:1}">↑</button><button onclick="moveEvent(${i},1)" ${i>=state.events.length-1?'disabled':''} style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:${i>=state.events.length-1?'var(--dim)':'var(--blue)'};font-size:10px;cursor:${i>=state.events.length-1?'default':'pointer'};font-family:inherit;opacity:${i>=state.events.length-1?.4:1}">↓</button><button onclick="editEvent('${ev.id}')" style="padding:4px 7px;background:rgba(77,225,255,.07);border:1px solid rgba(77,225,255,.13);border-radius:6px;color:var(--blue);font-size:10px;cursor:pointer;font-family:inherit">✏️</button><button onclick="deleteEvent('${ev.id}')" style="padding:4px 7px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div></div></div>`;
-      });
-
-      // Inline editor form
       if(state.editingEvent){
-        const ev=state.editingEvent;
-        const days=['MON','TUE','WED','THU','FRI','SAT','SUN'];
-        const colors=[{l:'Green',v:'#39ff73'},{l:'Pink',v:'#ff2d8a'},{l:'Yellow',v:'#ffe14d'},{l:'Blue',v:'#4de1ff'},{l:'Orange',v:'#ff6b35'},{l:'Purple',v:'#b44dff'}];
-        html+=`<div class="s-card" style="border:1px solid rgba(180,77,255,.3);margin-top:12px"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;color:var(--purple);margin:0 0 14px">${ev.id?'✏️ Edit Event':'✨ New Event'}</h4>`;
-        html+=`<div style="display:flex;gap:8px;margin-bottom:10px"><div style="flex:1"><label class="s-label">Day</label><select class="s-input" style="padding:10px 14px" onchange="state.editingEvent.day=this.value">${days.map(d=>`<option value="${d}" ${ev.day===d?'selected':''}>${d}</option>`).join('')}</select></div><div style="flex:1"><label class="s-label">Color</label><select class="s-input" style="padding:10px 14px" onchange="state.editingEvent.color=this.value">${colors.map(c=>`<option value="${c.v}" ${ev.color===c.v?'selected':''} style="color:${c.v}">${c.l}</option>`).join('')}</select></div></div>`;
-        html+=`<div style="margin-bottom:10px"><label class="s-label">Event Name</label><input class="s-input" value="${h(ev.name)}" oninput="state.editingEvent.name=this.value" placeholder="e.g. Throwback Thursday"></div>`;
-        html+=`<div style="margin-bottom:14px"><label class="s-label">Details / Promo</label><input class="s-input" value="${h(ev.detail)}" oninput="state.editingEvent.detail=this.value" placeholder="e.g. $2 tacos, half-off drinks"></div>`;
-        // Preview
-        html+=`<div style="margin-bottom:14px;padding:10px 12px;background:var(--input);border-radius:8px;border:1px solid var(--border)"><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Preview</div><div style="display:flex;align-items:center;gap:10px"><span style="font-weight:900;font-size:12px;color:${ev.color};min-width:32px;background:${ev.color}15;padding:4px 8px;border-radius:6px;text-align:center;font-family:'Outfit'">${h(ev.day)}</span><div><div style="font-weight:700;font-size:14px">${h(ev.name)||'Event Name'}</div><div style="font-size:12px;color:var(--dim)">${h(ev.detail)||'Details here'}</div></div></div></div>`;
-        html+=`<div style="display:flex;gap:8px"><button onclick="saveEventEdit()" style="padding:10px 18px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Event</button><button onclick="cancelEventEdit()" style="padding:10px 18px;background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button></div></div>`;
+        var eev=state.editingEvent;
+        var days=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+        var colors=[{l:'Green',v:'#39ff73'},{l:'Pink',v:'#ff2d8a'},{l:'Yellow',v:'#ffe14d'},{l:'Blue',v:'#4de1ff'},{l:'Orange',v:'#ff6b35'},{l:'Purple',v:'#b44dff'}];
+        html2+='<div class="s-card" style="border:1px solid rgba(180,77,255,.3);margin-top:12px"><h4 style="font-family:\'Outfit\';font-size:14px;font-weight:700;color:var(--purple);margin:0 0 14px">'+(eev.id?'✏️ Edit Event':'✨ New Event')+'</h4>';
+        html2+='<div style="display:flex;gap:8px;margin-bottom:10px"><div style="flex:1"><label class="s-label">Day</label><select class="s-input" style="padding:10px 14px" onchange="state.editingEvent.day=this.value">';
+        for(var di=0;di<days.length;di++){html2+='<option value="'+days[di]+'" '+(eev.day===days[di]?'selected':'')+'>'+days[di]+'</option>';}
+        html2+='</select></div><div style="flex:1"><label class="s-label">Color</label><select class="s-input" style="padding:10px 14px" onchange="state.editingEvent.color=this.value">';
+        for(var ci=0;ci<colors.length;ci++){html2+='<option value="'+colors[ci].v+'" '+(eev.color===colors[ci].v?'selected':'')+' style="color:'+colors[ci].v+'">'+colors[ci].l+'</option>';}
+        html2+='</select></div></div>';
+        html2+='<div style="margin-bottom:10px"><label class="s-label">Event Name</label><input class="s-input" value="'+h(eev.name)+'" oninput="state.editingEvent.name=this.value" placeholder="e.g. Throwback Thursday"></div>';
+        html2+='<div style="margin-bottom:14px"><label class="s-label">Details / Promo</label><input class="s-input" value="'+h(eev.detail)+'" oninput="state.editingEvent.detail=this.value" placeholder="e.g. $2 tacos, half-off drinks"></div>';
+        html2+='<div style="display:flex;gap:8px"><button onclick="saveEventEdit()" style="padding:10px 18px;background:linear-gradient(135deg,var(--purple),var(--pink));color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">Save Event</button><button onclick="cancelEventEdit()" style="padding:10px 18px;background:transparent;border:1px solid var(--border);color:var(--dim);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Cancel</button></div></div>';
       }
     }
     else if(ms==='offer'){
-      const o=state.offer;
-      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--yellow)">🍹 Special Offer</h3><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="s-label" style="margin:0">Active</span><button onclick="state.offer.active=!state.offer.active;saveOffer()" class="toggle ${o.active?'on':'off'}"><div class="dot"></div></button></div><div style="margin-bottom:10px"><label class="s-label">Emoji</label><input class="s-input" value="${h(o.emoji)}" oninput="state.offer.emoji=this.value" style="width:70px" maxlength="4"></div><div style="margin-bottom:10px"><label class="s-label">Title</label><input class="s-input" value="${h(o.title)}" oninput="state.offer.title=this.value"></div><div style="margin-bottom:14px"><label class="s-label">Description</label><textarea class="s-input" oninput="state.offer.text=this.value">${h(o.text)}</textarea></div><button onclick="saveOffer()" style="padding:8px 14px;background:linear-gradient(135deg,var(--yellow),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Offer</button></div>`;
+      var o=state.offer;
+      html2+='<div class="s-card"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--yellow)">🍹 Special Offer</h3><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="s-label" style="margin:0">Active</span><button onclick="state.offer.active=!state.offer.active;saveOffer()" class="toggle '+(o.active?'on':'off')+'"><div class="dot"></div></button></div><div style="margin-bottom:10px"><label class="s-label">Emoji</label><input class="s-input" value="'+h(o.emoji)+'" oninput="state.offer.emoji=this.value" style="width:70px" maxlength="4"></div><div style="margin-bottom:10px"><label class="s-label">Title</label><input class="s-input" value="'+h(o.title)+'" oninput="state.offer.title=this.value"></div><div style="margin-bottom:14px"><label class="s-label">Description</label><textarea class="s-input" oninput="state.offer.text=this.value">'+h(o.text)+'</textarea></div><button onclick="saveOffer()" style="padding:8px 14px;background:linear-gradient(135deg,var(--yellow),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">Save Offer</button></div>';
     }
     else if(ms==='tips'){
-      const t=state.tips;
-      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--gold)">💰 Tip Settings</h3><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:10px 14px;background:rgba(255,215,0,.04);border-radius:10px;border:1px solid rgba(255,215,0,.13)"><div><div style="font-size:14px;font-weight:700">Enable Tips</div><div style="font-size:11px;color:var(--dim)">Show tip option to singers</div></div><button onclick="state.tips.enabled=!state.tips.enabled;saveTips()" class="toggle ${t.enabled?'on':'off'}"><div class="dot"></div></button></div><div style="margin-bottom:10px"><label class="s-label">Headline</label><input class="s-input" value="${h(t.headline)}" oninput="state.tips.headline=this.value"></div><div style="margin-bottom:14px"><label class="s-label">Subtitle</label><textarea class="s-input" oninput="state.tips.subtitle=this.value">${h(t.subtitle)}</textarea></div><label class="s-label" style="margin-bottom:8px">Preset Amounts</label><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">${t.amounts.map((a,i)=>`<div style="display:flex;align-items:center;gap:4px"><span style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--gold);font-weight:800;font-family:'Outfit';font-size:15px">$${a}</span><button onclick="state.tips.amounts.splice(${i},1);saveTips()" style="background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;padding:4px 6px;cursor:pointer;font-family:inherit">✕</button></div>`).join('')}<button onclick="addTipAmount()" style="padding:6px 12px;background:rgba(57,255,115,.07);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">+ Add</button></div></div>`;
-
-      // Payment platforms
-      html+=`<div class="s-card"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;margin:0 0 14px;color:var(--blue)">Payment Platforms</h4>`;
-      [{key:'venmo',label:'Venmo',icon:'💜',color:'#008CFF',prefix:'venmo.com/'},{key:'cashapp',label:'Cash App',icon:'💚',color:'#00D632',prefix:'cash.app/'},{key:'paypal',label:'PayPal',icon:'💙',color:'#0070BA',prefix:'paypal.me/'}].forEach(p=>{
-        const en=t[p.key].enabled;
-        html+=`<div style="padding:12px 14px;background:${p.color}08;border:1px solid ${p.color}1a;border-radius:10px;margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between;${en?'margin-bottom:10px':''}"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">${p.icon}</span><span style="font-size:14px;font-weight:700;color:${p.color}">${p.label}</span></div><button onclick="state.tips.${p.key}.enabled=!state.tips.${p.key}.enabled;saveTips()" class="toggle ${en?'on':'off'}"><div class="dot"></div></button></div>${en?`<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:var(--dim);white-space:nowrap">${p.prefix}</span><input class="s-input" value="${h(t[p.key].handle.replace(/^\$/,''))}" oninput="state.tips.${p.key}.handle=${p.key==='cashapp'?"'$'+":"''+"}this.value" style="font-size:14px;padding:8px 12px"></div>`:''}</div>`;
-      });
-      html+=`<button onclick="saveTips()" style="width:100%;margin-top:6px;padding:14px 16px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit';text-transform:uppercase">Save Tip Settings 💰</button></div>`;
+      var t=state.tips;
+      html2+='<div class="s-card"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--gold)">💰 Tip Settings</h3><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:10px 14px;background:rgba(255,215,0,.04);border-radius:10px;border:1px solid rgba(255,215,0,.13)"><div><div style="font-size:14px;font-weight:700">Enable Tips</div><div style="font-size:11px;color:var(--dim)">Show tip option to singers</div></div><button onclick="state.tips.enabled=!state.tips.enabled;saveTips()" class="toggle '+(t.enabled?'on':'off')+'"><div class="dot"></div></button></div>';
+      html2+='<div style="margin-bottom:10px"><label class="s-label">Headline</label><input class="s-input" value="'+h(t.headline)+'" oninput="state.tips.headline=this.value"></div><div style="margin-bottom:14px"><label class="s-label">Subtitle</label><textarea class="s-input" oninput="state.tips.subtitle=this.value">'+h(t.subtitle)+'</textarea></div>';
+      html2+='<label class="s-label" style="margin-bottom:8px">Preset Amounts</label><div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">';
+      for(var tai=0;tai<t.amounts.length;tai++){
+        html2+='<div style="display:flex;align-items:center;gap:4px"><span style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--gold);font-weight:800;font-family:\'Outfit\';font-size:15px">$'+t.amounts[tai]+'</span><button onclick="state.tips.amounts.splice('+tai+',1);saveTips()" style="background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;padding:4px 6px;cursor:pointer;font-family:inherit">✕</button></div>';
+      }
+      html2+='<button onclick="addTipAmount()" style="padding:6px 12px;background:rgba(57,255,115,.07);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">+ Add</button></div></div>';
+      html2+='<div class="s-card"><h4 style="font-family:\'Outfit\';font-size:14px;font-weight:700;margin:0 0 14px;color:var(--blue)">Payment Platforms</h4>';
+      var payPlatforms=[{key:'venmo',label:'Venmo',icon:'💜',color:'#008CFF',prefix:'venmo.com/'},{key:'cashapp',label:'Cash App',icon:'💚',color:'#00D632',prefix:'cash.app/'},{key:'paypal',label:'PayPal',icon:'💙',color:'#0070BA',prefix:'paypal.me/'}];
+      for(var ppi=0;ppi<payPlatforms.length;ppi++){
+        var pp=payPlatforms[ppi];var en=t[pp.key].enabled;
+        html2+='<div style="padding:12px 14px;background:'+pp.color+'08;border:1px solid '+pp.color+'1a;border-radius:10px;margin-bottom:8px"><div style="display:flex;align-items:center;justify-content:space-between;'+(en?'margin-bottom:10px':'')+'"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+pp.icon+'</span><span style="font-size:14px;font-weight:700;color:'+pp.color+'">'+pp.label+'</span></div><button onclick="state.tips.'+pp.key+'.enabled=!state.tips.'+pp.key+'.enabled;saveTips()" class="toggle '+(en?'on':'off')+'"><div class="dot"></div></button></div>'+(en?'<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:var(--dim);white-space:nowrap">'+pp.prefix+'</span><input class="s-input" value="'+h(t[pp.key].handle.replace(/^\$/,''))+'" oninput="state.tips.'+pp.key+'.handle='+(pp.key==='cashapp'?"\'$\'+":"\'\'+")+' this.value" style="font-size:14px;padding:8px 12px"></div>':'')+'</div>';
+      }
+      html2+='<button onclick="saveTips()" style="width:100%;margin-top:6px;padding:14px 16px;background:linear-gradient(135deg,var(--gold),var(--orange));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\';text-transform:uppercase">Save Tip Settings 💰</button></div>';
     }
     else if(ms==='reviews'){
       var rv=state.reviews;
-      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:#4285F4">⭐ Review Links</h3>`;
-
-      // Master toggle
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:10px 14px;background:rgba(66,133,244,.04);border-radius:10px;border:1px solid rgba(66,133,244,.13)"><div><div style="font-size:14px;font-weight:700">Show Review Links</div><div style="font-size:11px;color:var(--dim)">Display on singer screens</div></div><button onclick="state.reviews.enabled=!state.reviews.enabled;saveReviews()" class="toggle ${rv.enabled?'on':'off'}"><div class="dot"></div></button></div>`;
-
-      // Display text
-      html+=`<div style="margin-bottom:10px"><label class="s-label">Headline</label><input class="s-input" value="${h(rv.headline||'')}" oninput="state.reviews.headline=this.value"></div>`;
-      html+=`<div style="margin-bottom:16px"><label class="s-label">Subtitle</label><textarea class="s-input" oninput="state.reviews.subtitle=this.value">${h(rv.subtitle||'')}</textarea></div>`;
-
-      // Platform links
-      html+=`<div style="font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Review Platforms</div>`;
-
-      var platforms=[
-        {key:'google',label:'Google',icon:'⭐',color:'#4285F4',hint:'Go to Google Maps → Your business → Share → Copy link'},
-        {key:'yelp',label:'Yelp',icon:'🔴',color:'#FF1A1A',hint:'Go to yelp.com/biz/your-bar → Copy the URL'},
-        {key:'facebook',label:'Facebook',icon:'👍',color:'#1877F2',hint:'Go to your Facebook page → Reviews tab → Copy the URL'}
-      ];
-
-      platforms.forEach(function(p){
-        var plat=rv[p.key]||{enabled:true,url:''};
-        html+=`<div style="padding:12px 14px;background:${p.color}08;border:1px solid ${p.color}1a;border-radius:10px;margin-bottom:8px">`;
-        html+=`<div style="display:flex;align-items:center;justify-content:space-between;${plat.enabled?'margin-bottom:10px':''}">`;
-        html+=`<div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">${p.icon}</span><span style="font-size:14px;font-weight:700;color:${p.color}">${p.label}</span></div>`;
-        html+=`<button onclick="if(!state.reviews.${p.key})state.reviews.${p.key}={enabled:true,url:''};state.reviews.${p.key}.enabled=!state.reviews.${p.key}.enabled;saveReviews()" class="toggle ${plat.enabled?'on':'off'}"><div class="dot"></div></button></div>`;
+      html2+='<div class="s-card"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 14px;color:#4285F4">⭐ Review Links</h3>';
+      html2+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;padding:10px 14px;background:rgba(66,133,244,.04);border-radius:10px;border:1px solid rgba(66,133,244,.13)"><div><div style="font-size:14px;font-weight:700">Show Review Links</div><div style="font-size:11px;color:var(--dim)">Display on singer screens</div></div><button onclick="state.reviews.enabled=!state.reviews.enabled;saveReviews()" class="toggle '+(rv.enabled?'on':'off')+'"><div class="dot"></div></button></div>';
+      html2+='<div style="margin-bottom:10px"><label class="s-label">Headline</label><input class="s-input" value="'+h(rv.headline||'')+'" oninput="state.reviews.headline=this.value"></div>';
+      html2+='<div style="margin-bottom:16px"><label class="s-label">Subtitle</label><textarea class="s-input" oninput="state.reviews.subtitle=this.value">'+h(rv.subtitle||'')+'</textarea></div>';
+      html2+='<div style="font-size:12px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Review Platforms</div>';
+      var revPlatforms=[{key:'google',label:'Google',icon:'⭐',color:'#4285F4',hint:'Go to Google Maps → Your business → Share → Copy link'},{key:'yelp',label:'Yelp',icon:'🔴',color:'#FF1A1A',hint:'Go to yelp.com/biz/your-bar → Copy the URL'},{key:'facebook',label:'Facebook',icon:'👍',color:'#1877F2',hint:'Go to your Facebook page → Reviews tab → Copy the URL'}];
+      for(var rpi=0;rpi<revPlatforms.length;rpi++){
+        var rp=revPlatforms[rpi];var plat=rv[rp.key]||{enabled:true,url:''};
+        html2+='<div style="padding:12px 14px;background:'+rp.color+'08;border:1px solid '+rp.color+'1a;border-radius:10px;margin-bottom:8px">';
+        html2+='<div style="display:flex;align-items:center;justify-content:space-between;'+(plat.enabled?'margin-bottom:10px':'')+'">';
+        html2+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">'+rp.icon+'</span><span style="font-size:14px;font-weight:700;color:'+rp.color+'">'+rp.label+'</span></div>';
+        html2+='<button onclick="if(!state.reviews.'+rp.key+')state.reviews.'+rp.key+'={enabled:true,url:\'\'};state.reviews.'+rp.key+'.enabled=!state.reviews.'+rp.key+'.enabled;saveReviews()" class="toggle '+(plat.enabled?'on':'off')+'"><div class="dot"></div></button></div>';
         if(plat.enabled){
-          html+=`<div style="margin-bottom:4px"><input class="s-input" value="${h(plat.url||'')}" oninput="state.reviews.${p.key}.url=this.value" placeholder="Paste your ${p.label} review link here" style="font-size:14px;padding:10px 12px"></div>`;
-          html+=`<div style="font-size:10px;color:var(--dim);line-height:1.4;margin-top:4px">💡 ${p.hint}</div>`;
+          html2+='<div style="margin-bottom:4px"><input class="s-input" value="'+h(plat.url||'')+'" oninput="state.reviews.'+rp.key+'.url=this.value" placeholder="Paste your '+rp.label+' review link here" style="font-size:14px;padding:10px 12px"></div>';
+          html2+='<div style="font-size:10px;color:var(--dim);line-height:1.4;margin-top:4px">💡 '+rp.hint+'</div>';
         }
-        html+=`</div>`;
-      });
-
-      html+=`<button onclick="saveReviews()" style="width:100%;margin-top:10px;padding:14px 16px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit';text-transform:uppercase">Save Review Links ⭐</button>`;
-
-      // QR Code section
-      html+=`<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;margin:0 0 8px;color:var(--yellow)">🖨️ Printable QR Codes</h4><p style="font-size:12px;color:var(--dim);margin:0 0 12px;line-height:1.5">Print these and put them on every table. Customers scan with their phone camera to leave a review instantly.</p>`;
-      html+=`<button onclick="printReviewQR()" style="width:100%;padding:12px 16px;background:rgba(255,225,77,.12);border:1px solid rgba(255,225,77,.3);border-radius:10px;color:var(--yellow);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">🖨️ Generate & Print QR Codes</button></div>`;
-
-      html+=`</div>`;
+        html2+='</div>';
+      }
+      html2+='<button onclick="saveReviews()" style="width:100%;margin-top:10px;padding:14px 16px;background:linear-gradient(135deg,#4285F4,#34A853);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\';text-transform:uppercase">Save Review Links ⭐</button>';
+      html2+='<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)"><h4 style="font-family:\'Outfit\';font-size:14px;font-weight:700;margin:0 0 8px;color:var(--yellow)">🖨️ Printable QR Codes</h4><p style="font-size:12px;color:var(--dim);margin:0 0 12px;line-height:1.5">Print these and put them on every table.</p>';
+      html2+='<button onclick="printReviewQR()" style="width:100%;padding:12px 16px;background:rgba(255,225,77,.12);border:1px solid rgba(255,225,77,.3);border-radius:10px;color:var(--yellow);font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">🖨️ Generate & Print QR Codes</button></div></div>';
     }
     else if(ms==='rules'){
-      html+='<h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 10px">📜 Rules</h3>';
-      state.rules.forEach((r,i)=>{
-        html+=`<div class="s-card" style="display:flex;align-items:center;gap:8px;padding:10px 14px;margin-bottom:6px"><span style="color:var(--yellow);font-weight:700;min-width:18px;font-size:13px">${i+1}.</span><span style="flex:1;font-size:13px;color:var(--dim)">${h(r)}</span><button onclick="moveRule(${i},-1)" ${i===0?'disabled':''} style="padding:4px 6px;background:transparent;border:1px solid var(--border);border-radius:5px;color:${i===0?'var(--dim)':'var(--blue)'};font-size:10px;cursor:${i===0?'default':'pointer'};font-family:inherit;opacity:${i===0?.4:1}">↑</button><button onclick="deleteRule(${i})" style="padding:4px 6px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:5px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div>`;
-      });
-      html+=`<div style="display:flex;gap:8px;margin-top:10px"><input class="s-input" id="newRule" placeholder="Add a new rule..." style="flex:1" onkeydown="if(event.key==='Enter')addNewRule()"><button onclick="addNewRule()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">+ Add</button></div>`;
+      html2+='<h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 10px">📜 Rules</h3>';
+      for(var rui=0;rui<state.rules.length;rui++){
+        html2+='<div class="s-card" style="display:flex;align-items:center;gap:8px;padding:10px 14px;margin-bottom:6px"><span style="color:var(--yellow);font-weight:700;min-width:18px;font-size:13px">'+(rui+1)+'.</span><span style="flex:1;font-size:13px;color:var(--dim)">'+h(state.rules[rui])+'</span><button onclick="moveRule('+rui+',-1)" '+(rui===0?'disabled':'')+' style="padding:4px 6px;background:transparent;border:1px solid var(--border);border-radius:5px;color:'+(rui===0?'var(--dim)':'var(--blue)')+';font-size:10px;cursor:'+(rui===0?'default':'pointer')+';font-family:inherit;opacity:'+(rui===0?.4:1)+'">↑</button><button onclick="deleteRule('+rui+')" style="padding:4px 6px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:5px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div>';
+      }
+      html2+='<div style="display:flex;gap:8px;margin-top:10px"><input class="s-input" id="newRule" placeholder="Add a new rule..." style="flex:1" onkeydown="if(event.key===\'Enter\')addNewRule()"><button onclick="addNewRule()" style="padding:8px 14px;background:rgba(57,255,115,.09);border:none;border-radius:10px;color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">+ Add</button></div>';
     }
     else if(ms==='customers'){
       var custs=state.customers;
       var search=state.customerSearch.toLowerCase();
-      var localCount=custs.filter(function(c){return c.isLocal;}).length;
+      var localCount=0;for(var lci=0;lci<custs.length;lci++){if(custs[lci].isLocal)localCount++;}
       var outCount=custs.length-localCount;
-      var filtered=search?custs.filter(function(c){
-        return c.name.toLowerCase().indexOf(search)>-1 || c.phone.indexOf(search)>-1 || (c.region||'').toLowerCase().indexOf(search)>-1 || (c.state||'').toLowerCase().indexOf(search)>-1;
-      }):custs;
-      var sorted=filtered.slice().sort(function(a,b){return (b.visits||1)-(a.visits||1);});
+      var filtered=search?custs.filter(function(c){return c.name.toLowerCase().indexOf(search)>-1||c.phone.indexOf(search)>-1||(c.region||'').toLowerCase().indexOf(search)>-1||(c.state||'').toLowerCase().indexOf(search)>-1;}):custs;
+      var sorted=filtered.slice().sort(function(a,b){return(b.visits||1)-(a.visits||1);});
+      var optedIn=0;for(var oi2=0;oi2<custs.length;oi2++){if(custs[oi2].marketingConsent)optedIn++;}
 
-      html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0">📇 Customers (${custs.length})</h3><button onclick="exportCustomersCSV()" style="padding:6px 12px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 CSV</button></div>`;
-
-      // Stats bar
-      html+=`<div style="display:flex;gap:8px;margin-bottom:12px">`;
-      html+=`<div style="flex:1;background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:'Outfit';color:var(--green)">${localCount}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">🟢 Local</div></div>`;
-      html+=`<div style="flex:1;background:rgba(255,225,77,.06);border:1px solid rgba(255,225,77,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:'Outfit';color:var(--yellow)">${outCount}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">🟡 Out of State</div></div>`;
-      html+=`<div style="flex:1;background:rgba(66,133,244,.06);border:1px solid rgba(66,133,244,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:'Outfit';color:#4285F4">${custs.filter(function(c){return c.marketingConsent;}).length}</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">✅ Opted In</div></div>`;
-      html+=`</div>`;
-
-      html+=`<div style="margin-bottom:12px"><input class="s-input" placeholder="🔍 Search name, phone, or state..." value="${h(state.customerSearch)}" oninput="state.customerSearch=this.value;render()"></div>`;
-
-      if(!sorted.length){
-        html+=`<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">📇</div><div style="color:var(--dim);font-size:13px">${search?'No customers match your search':'No customers yet — they appear when singers submit songs'}</div></div>`;
-      } else {
-        sorted.forEach(function(c){
+      html2+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0">📇 Customers ('+custs.length+')</h3><button onclick="exportCustomersCSV()" style="padding:6px 12px;background:rgba(57,255,115,.09);border:1px solid rgba(57,255,115,.2);border-radius:8px;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">📥 CSV</button></div>';
+      html2+='<div style="display:flex;gap:8px;margin-bottom:12px"><div style="flex:1;background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:\'Outfit\';color:var(--green)">'+localCount+'</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">🟢 Local</div></div><div style="flex:1;background:rgba(255,225,77,.06);border:1px solid rgba(255,225,77,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:\'Outfit\';color:var(--yellow)">'+outCount+'</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">🟡 Out of State</div></div><div style="flex:1;background:rgba(66,133,244,.06);border:1px solid rgba(66,133,244,.15);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:900;font-family:\'Outfit\';color:#4285F4">'+optedIn+'</div><div style="font-size:9px;color:var(--dim);text-transform:uppercase">✅ Opted In</div></div></div>';
+      html2+='<div style="margin-bottom:12px"><input class="s-input" placeholder="🔍 Search name, phone, or state..." value="'+h(state.customerSearch)+'" oninput="state.customerSearch=this.value;render()"></div>';
+      if(!sorted.length){html2+='<div style="text-align:center;padding:36px 18px;background:var(--card);border-radius:12px;border:1px solid var(--border)"><div style="font-size:36px;margin-bottom:6px">📇</div><div style="color:var(--dim);font-size:13px">'+(search?'No customers match your search':'No customers yet')+'</div></div>';}
+      else{
+        for(var sci=0;sci<sorted.length;sci++){
+          var c=sorted[sci];
           var songCount=c.songs?c.songs.length:1;
           var regionTag=c.region||'';
           if(!regionTag&&c.phone){var rg=getPhoneRegion(c.phone.replace(/[^0-9]/g,''));regionTag=rg.label;}
           var consentBadge=c.marketingConsent?'<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(57,255,115,.1);color:var(--green);font-weight:600">✅ Opted In</span>':'<span style="font-size:10px;padding:2px 6px;border-radius:10px;background:rgba(255,68,102,.1);color:var(--red);font-weight:600">❌ No Consent</span>';
-          html+=`<div class="s-card" style="padding:14px 16px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:16px;font-weight:700;font-family:'Outfit'">${h(c.name)}</span><span style="font-size:10px;padding:3px 8px;border-radius:12px;background:${c.isLocal?'rgba(57,255,115,.1)':'rgba(255,225,77,.1)'};color:${c.isLocal?'var(--green)':'var(--yellow)'};font-weight:700">${h(regionTag)}</span>${consentBadge}</div><div style="font-size:13px;color:var(--dim);margin-top:2px">📱 ${h(c.phone)}</div><div style="display:flex;gap:12px;margin-top:8px"><div style="font-size:11px;color:var(--blue)"><span style="font-weight:800;font-size:14px">${c.visits||1}</span> visit${(c.visits||1)>1?'s':''}</div><div style="font-size:11px;color:var(--yellow)"><span style="font-weight:800;font-size:14px">${songCount}</span> song${songCount>1?'s':''}</div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">First: ${h(c.firstVisit||'—')} · Last: ${h(c.lastVisit||'—')}</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${c.marketingConsent?'<button onclick="textForReview(\''+c.phone+'\',\''+h(c.name)+'\')" style="padding:4px 8px;background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.2);border-radius:6px;color:#4285F4;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📲 Review</button><button onclick="textPromo(\''+c.phone+'\',\''+h(c.name)+'\')" style="padding:4px 8px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);border-radius:6px;color:var(--orange);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📣 Promo</button>':''}<button onclick="deleteCustomer('${c.id}')" style="padding:4px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div></div>`;
+          html2+='<div class="s-card" style="padding:14px 16px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:16px;font-weight:700;font-family:\'Outfit\'">'+h(c.name)+'</span><span style="font-size:10px;padding:3px 8px;border-radius:12px;background:'+(c.isLocal?'rgba(57,255,115,.1)':'rgba(255,225,77,.1)')+';color:'+(c.isLocal?'var(--green)':'var(--yellow)')+';font-weight:700">'+h(regionTag)+'</span>'+consentBadge+'</div><div style="font-size:13px;color:var(--dim);margin-top:2px">📱 '+h(c.phone)+'</div><div style="display:flex;gap:12px;margin-top:8px"><div style="font-size:11px;color:var(--blue)"><span style="font-weight:800;font-size:14px">'+(c.visits||1)+'</span> visit'+((c.visits||1)>1?'s':'')+'</div><div style="font-size:11px;color:var(--yellow)"><span style="font-weight:800;font-size:14px">'+songCount+'</span> song'+(songCount>1?'s':'')+'</div></div><div style="font-size:11px;color:var(--dim);margin-top:6px">First: '+h(c.firstVisit||'—')+' · Last: '+h(c.lastVisit||'—')+'</div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">'+(c.marketingConsent?'<button onclick="textForReview(\''+c.phone+'\',\''+h(c.name)+'\')" style="padding:4px 8px;background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.2);border-radius:6px;color:#4285F4;font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📲 Review</button><button onclick="textPromo(\''+c.phone+'\',\''+h(c.name)+'\')" style="padding:4px 8px;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);border-radius:6px;color:var(--orange);font-size:10px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">📣 Promo</button>':'')+'<button onclick="deleteCustomer(\''+c.id+'\')" style="padding:4px 8px;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.13);border-radius:6px;color:var(--red);font-size:10px;cursor:pointer;font-family:inherit">✕</button></div></div>';
           if(c.songs&&c.songs.length){
-            html+=`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Song History</div>`;
-            c.songs.slice(-5).reverse().forEach(function(s){
-              html+=`<div style="font-size:12px;color:var(--dim);margin-bottom:3px">🎵 <span style="color:var(--text)">${h(s.song)}</span> — ${h(s.author)} <span style="opacity:.5">(${h(s.date)})</span></div>`;
-            });
-            if(c.songs.length>5) html+=`<div style="font-size:11px;color:var(--dim);opacity:.5">...and ${c.songs.length-5} more</div>`;
-            html+=`</div>`;
+            html2+='<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Song History</div>';
+            var showSongs=c.songs.slice(-5).reverse();
+            for(var ssi=0;ssi<showSongs.length;ssi++){
+              html2+='<div style="font-size:12px;color:var(--dim);margin-bottom:3px">🎵 <span style="color:var(--text)">'+h(showSongs[ssi].song)+'</span> — '+h(showSongs[ssi].author)+' <span style="opacity:.5">('+h(showSongs[ssi].date)+')</span></div>';
+            }
+            if(c.songs.length>5) html2+='<div style="font-size:11px;color:var(--dim);opacity:.5">...and '+(c.songs.length-5)+' more</div>';
+            html2+='</div>';
           }
-          html+=`</div>`;
-        });
+          html2+='</div>';
+        }
       }
     }
     else if(ms==='barinfo'){
-      const b=state.bar;
-      html+=`<div class="s-card"><h3 style="font-family:'Outfit';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--blue)">🏠 Bar Information</h3>`;
-      [{k:'name',l:'Bar Name'},{k:'tagline',l:'Tagline'},{k:'address',l:'Address'},{k:'phone',l:'Phone'},{k:'hours',l:'Hours'},{k:'social',l:'Social Handle'},{k:'kjPin',l:'🎧 KJ PIN'},{k:'adminPin',l:'🔑 Admin PIN'}].forEach(({k,l})=>{
-        html+=`<div style="margin-bottom:10px"><label class="s-label">${l}</label><input class="s-input" value="${h(b[k])}" oninput="state.bar.${k}=this.value" type="${(k==='kjPin'||k==='adminPin')?'password':'text'}"></div>`;
-      });
-      html+=`<button onclick="saveBar()" style="padding:8px 14px;background:linear-gradient(135deg,var(--blue),var(--green));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">Save Info</button></div>`;
-
-      // Kiosk mode section
+      var b=state.bar;
+      html2+='<div class="s-card"><h3 style="font-family:\'Outfit\';font-size:15px;font-weight:700;margin:0 0 14px;color:var(--blue)">🏠 Bar Information</h3>';
+      var barFields=[{k:'name',l:'Bar Name'},{k:'tagline',l:'Tagline'},{k:'address',l:'Address'},{k:'phone',l:'Phone'},{k:'hours',l:'Hours'},{k:'social',l:'Social Handle'},{k:'kjPin',l:'🎧 KJ PIN'},{k:'adminPin',l:'🔑 Admin PIN'}];
+      for(var bfi=0;bfi<barFields.length;bfi++){
+        var bf=barFields[bfi];
+        html2+='<div style="margin-bottom:10px"><label class="s-label">'+bf.l+'</label><input class="s-input" value="'+h(b[bf.k])+'" oninput="state.bar.'+bf.k+'=this.value" type="'+((bf.k==='kjPin'||bf.k==='adminPin')?'password':'text')+'"></div>';
+      }
+      html2+='<button onclick="saveBar()" style="padding:8px 14px;background:linear-gradient(135deg,var(--blue),var(--green));color:#000;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">Save Info</button></div>';
       var kioskUrl=window.location.origin+window.location.pathname+'?kiosk=1';
-      html+=`<div class="s-card" style="border:1px solid rgba(255,45,138,.2)"><h4 style="font-family:'Outfit';font-size:14px;font-weight:700;margin:0 0 8px;color:var(--pink)">📱 Customer Tablet (Kiosk Mode)</h4><p style="font-size:12px;color:var(--dim);margin:0 0 12px;line-height:1.5">Open this link on the tablet customers will use. It hides the KJ controls, shows the review QR code after each signup, and auto-resets for the next singer.</p>`;
-      html+=`<div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);word-break:break-all;margin-bottom:10px">${h(kioskUrl)}</div>`;
-      html+=`<button onclick="copyKioskUrl()" style="width:100%;padding:10px 16px;background:rgba(255,45,138,.12);border:1px solid rgba(255,45,138,.3);border-radius:10px;color:var(--pink);font-size:13px;font-weight:700;cursor:pointer;font-family:'Outfit'">📋 Copy Kiosk Link</button></div>`;
+      html2+='<div class="s-card" style="border:1px solid rgba(255,45,138,.2)"><h4 style="font-family:\'Outfit\';font-size:14px;font-weight:700;margin:0 0 8px;color:var(--pink)">📱 Customer Tablet (Kiosk Mode)</h4><p style="font-size:12px;color:var(--dim);margin:0 0 12px;line-height:1.5">Open this link on the tablet customers will use.</p><div style="background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--yellow);word-break:break-all;margin-bottom:10px">'+h(kioskUrl)+'</div><button onclick="copyKioskUrl()" style="width:100%;padding:10px 16px;background:rgba(255,45,138,.12);border:1px solid rgba(255,45,138,.3);border-radius:10px;color:var(--pink);font-size:13px;font-weight:700;cursor:pointer;font-family:\'Outfit\'">📋 Copy Kiosk Link</button></div>';
     }
-    mEl.innerHTML=html;
+    mEl.innerHTML=html2;
   }
 }
 
 // ── Event/Rule helpers ──
 function addNewEvent(){state.editingEvent={id:'',day:'FRI',name:'',detail:'',color:'#39ff73'};render();}
-function editEvent(id){const ev=state.events.find(e=>e.id===id);if(!ev)return;state.editingEvent={...ev};render();}
+function editEvent(id){var ev=null;for(var i=0;i<state.events.length;i++){if(state.events[i].id===id){ev=state.events[i];break;}}if(!ev)return;state.editingEvent={};for(var k in ev){state.editingEvent[k]=ev[k];}render();}
 function cancelEventEdit(){state.editingEvent=null;render();}
 function saveEventEdit(){
-  const ev=state.editingEvent;if(!ev||!ev.name)return;
+  var ev=state.editingEvent;if(!ev||!ev.name)return;
   if(!ev.id){ev.id=Date.now().toString();state.events.push(ev);}
-  else{const i=state.events.findIndex(e=>e.id===ev.id);if(i>=0)state.events[i]=ev;}
+  else{for(var i=0;i<state.events.length;i++){if(state.events[i].id===ev.id){state.events[i]=ev;break;}}}
   state.editingEvent=null;saveEvents();
 }
-function moveEvent(i,dir){const j=i+dir;if(j<0||j>=state.events.length)return;[state.events[i],state.events[j]]=[state.events[j],state.events[i]];saveEvents();}
-function addNewRule(){const el=g('newRule');if(!el||!el.value.trim())return;state.rules.push(el.value.trim());el.value='';saveRules();}
-function addTipAmount(){const v=prompt('Enter tip amount ($):');if(v&&!isNaN(v)&&Number(v)>0){state.tips.amounts.push(Number(v));saveTips();}}
+function moveEvent(i,dir){var j=i+dir;if(j<0||j>=state.events.length)return;var tmp=state.events[i];state.events[i]=state.events[j];state.events[j]=tmp;saveEvents();}
+function addNewRule(){var el=g('newRule');if(!el||!el.value.trim())return;state.rules.push(el.value.trim());el.value='';saveRules();}
+function addTipAmount(){var v=prompt('Enter tip amount ($):');if(v&&!isNaN(v)&&Number(v)>0){state.tips.amounts.push(Number(v));saveTips();}}
 
 // ═══════ CUSTOMER ACTIONS ═══════
-function deleteCustomer(id){state.customers=state.customers.filter(c=>c.id!==id);fbSet('customers',arrToObj(state.customers));toast('Customer removed');}
+function deleteCustomer(id){state.customers=state.customers.filter(function(c){return c.id!==id;});fbSet('customers',arrToObj(state.customers));toast('Customer removed');}
 
 function textForReview(phone,name){
   var barName=state.bar.name||"PEPE'S";
-  var r=state.reviews||{};
-  var reviewUrl='';
+  var r=state.reviews||{};var reviewUrl='';
   if(r.google&&r.google.enabled&&r.google.url) reviewUrl=r.google.url;
   else if(r.yelp&&r.yelp.enabled&&r.yelp.url) reviewUrl=r.yelp.url;
   else if(r.facebook&&r.facebook.enabled&&r.facebook.url) reviewUrl=r.facebook.url;
@@ -1293,15 +1524,9 @@ function textForReview(phone,name){
 function textPromo(phone,name){
   var barName=state.bar.name||"PEPE'S";
   var msg='Hey '+name+'! 🌶️ '+barName+' has something special this week!\n\n';
-  if(state.events.length){
-    state.events.forEach(function(ev){
-      msg+=ev.day+': '+ev.name+' — '+ev.detail+'\n';
-    });
-    msg+='\n';
-  }
-  if(state.offer.active){
-    msg+=state.offer.title+': '+state.offer.text+'\n\n';
-  }
+  for(var i=0;i<state.events.length;i++){var ev=state.events[i];msg+=ev.day+': '+ev.name+' — '+ev.detail+'\n';}
+  if(state.events.length)msg+='\n';
+  if(state.offer.active){msg+=state.offer.title+': '+state.offer.text+'\n\n';}
   msg+='See you at the mic! 🎤\n\nReply STOP to opt out.';
   window.open('sms:'+phone+'?body='+encodeURIComponent(msg),'_blank');
 }
@@ -1309,11 +1534,12 @@ function textPromo(phone,name){
 function exportCustomersCSV(){
   if(!state.customers.length){toast('No customers to export');return;}
   var csv='Name,Phone,Region,State,Local,Marketing Consent,Age 21+ Verified,Visits,First Visit,Last Visit,Songs\n';
-  state.customers.forEach(function(c){
+  for(var i=0;i<state.customers.length;i++){
+    var c=state.customers[i];
     var songs=c.songs?c.songs.map(function(s){return s.song+' by '+s.author;}).join(' | '):'';
     var region=(c.region||'').replace(/🟢 |🟡 |🔴 /g,'');
-    csv+='"'+(c.name||'').replace(/"/g,'""')+'","'+c.phone+'","'+region+'","'+(c.state||'')+'","'+(c.isLocal?'Yes':'No')+'","'+(c.marketingConsent?'Yes':'No')+'","'+(c.ageVerified?'Yes':'No')+'",'+( c.visits||1)+',"'+(c.firstVisit||'')+'","'+(c.lastVisit||'')+'","'+songs.replace(/"/g,'""')+'"\n';
-  });
+    csv+='"'+(c.name||'').replace(/"/g,'""')+'","'+c.phone+'","'+region+'","'+(c.state||'')+'","'+(c.isLocal?'Yes':'No')+'","'+(c.marketingConsent?'Yes':'No')+'","'+(c.ageVerified?'Yes':'No')+'","'+( c.visits||1)+'","'+(c.firstVisit||'')+'","'+(c.lastVisit||'')+'","'+songs.replace(/"/g,'""')+'"\n';
+  }
   var blob=new Blob([csv],{type:'text/csv'});
   var url=URL.createObjectURL(blob);
   var a=document.createElement('a');
@@ -1324,7 +1550,8 @@ function exportCustomersCSV(){
 }
 
 function resetSingerToDisplay(){
-  state.myId=null;state.returningCustomer=null;state.ageChecked=false;state.marketingChecked=false;
+  state.myId=null;state.returningCustomer=null;
+  state.ageChecked=true;state.marketingChecked=true;
   var nameEl=document.getElementById('fName');if(nameEl)nameEl.value='';
   var phoneEl=document.getElementById('fPhone');if(phoneEl)phoneEl.value='';
   var songEl=document.getElementById('fSong');if(songEl)songEl.value='';
@@ -1332,8 +1559,10 @@ function resetSingerToDisplay(){
   state.selectedTip=null;state.customTip="";
   var rb=document.getElementById('returningBanner');if(rb)rb.classList.add('hidden');
   var pf=document.getElementById('phoneField');if(pf)pf.classList.remove('hidden');
-  var cm=document.getElementById('customerMatches');if(cm)cm.classList.add('hidden');
+  var nf=document.getElementById('nameField');if(nf)nf.classList.remove('hidden');
+  var sh=document.getElementById('songHistorySection');if(sh)sh.classList.add('hidden');
   if(kioskTimer){clearInterval(kioskTimer);kioskTimer=null;}
+  g('stickySubmitWrap').classList.add('hidden');
   openStageDisplay();
 }
 
@@ -1348,7 +1577,7 @@ function openStageDisplay(){
   stageInterval=setInterval(function(){
     stageQrIndex++;
     updateStageDisplay();
-  },6000); // rotate QR every 6 seconds
+  },6000);
 }
 
 function closeStageDisplay(){
@@ -1364,13 +1593,16 @@ function closeStageDisplay(){
 
 function updateStageDisplay(){
   var q=state.queue;
-  var cs=q.find(function(s){return s.status==='singing';});
-  var waiting=q.filter(function(s){return s.status==='waiting';});
+  var cs=null;
+  var waiting=[];
+  for(var i=0;i<q.length;i++){
+    if(q[i].status==='singing') cs=q[i];
+    if(q[i].status==='waiting') waiting.push(q[i]);
+  }
   var nextUp=waiting.length>0?waiting[0]:null;
   var barName=state.bar.name||"PEPE'S";
   var r=state.reviews||{};
 
-  // Build QR rotation list
   var qrItems=[];
   var appUrl=window.location.href;
   qrItems.push({label:'🎤 Scan to Join the Waitlist',url:appUrl,sub:'Sign up for your song!'});
@@ -1382,56 +1614,41 @@ function updateStageDisplay(){
   var qrUrl='https://api.qrserver.com/v1/create-qr-code/?size=220x220&bgcolor=050508&color=ffffff&data='+encodeURIComponent(currentQr.url);
 
   var html='';
-
-  // Bar header
   html+='<div style="font-size:28px;margin-bottom:4px">🌶️🎤</div>';
   html+='<div style="font-family:\'Outfit\';font-size:36px;font-weight:900;background:linear-gradient(135deg,#ffe14d,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:2px">'+barName+'</div>';
   html+='<div style="font-size:14px;letter-spacing:6px;text-transform:uppercase;color:#ff2d8a;font-weight:600;margin-bottom:24px">'+(state.bar.tagline||'Karaoke Bar')+'</div>';
 
   if(cs){
-    // Someone is singing
     html+='<div style="background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);border-radius:20px;padding:24px 30px;margin-bottom:20px">';
     html+='<div style="font-size:12px;text-transform:uppercase;letter-spacing:4px;color:#ff6b35;font-weight:700;margin-bottom:8px;animation:pu 2s infinite">🎙️ NOW SINGING</div>';
     html+='<div style="font-family:\'Outfit\';font-size:42px;font-weight:900;margin-bottom:6px">'+h(cs.name)+'</div>';
     html+='<div style="font-size:22px;color:#ffe14d;font-weight:600">🎵 '+h(cs.song)+'</div>';
-    html+='<div style="font-size:16px;color:#7a7a99;margin-top:4px">by '+h(cs.author)+'</div>';
-    html+='</div>';
+    html+='<div style="font-size:16px;color:#7a7a99;margin-top:4px">by '+h(cs.author)+'</div></div>';
   } else {
-    // No one singing
     html+='<div style="background:rgba(57,255,115,.06);border:1px solid rgba(57,255,115,.15);border-radius:20px;padding:24px 30px;margin-bottom:20px">';
     html+='<div style="font-size:40px;margin-bottom:8px">🎤</div>';
     html+='<div style="font-family:\'Outfit\';font-size:28px;font-weight:800;color:#39ff73">Stage is Open!</div>';
-    html+='<div style="font-size:16px;color:#7a7a99;margin-top:4px">Scan below to sign up</div>';
-    html+='</div>';
+    html+='<div style="font-size:16px;color:#7a7a99;margin-top:4px">Scan below to sign up</div></div>';
   }
 
-  // Up next
   if(nextUp){
-    html+='<div style="margin-bottom:20px;font-size:14px;color:#7a7a99">';
-    html+='<span style="color:#4de1ff;font-weight:700">UP NEXT:</span> '+h(nextUp.name)+' — '+h(nextUp.song);
-    if(waiting.length>1) html+=' <span style="opacity:.5">(+' +(waiting.length-1)+' more)</span>';
+    html+='<div style="margin-bottom:20px;font-size:14px;color:#7a7a99"><span style="color:#4de1ff;font-weight:700">UP NEXT:</span> '+h(nextUp.name)+' — '+h(nextUp.song);
+    if(waiting.length>1) html+=' <span style="opacity:.5">(+'+(waiting.length-1)+' more)</span>';
     html+='</div>';
   }
 
-  // QR Code section
   html+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;display:inline-block">';
   html+='<div style="font-size:16px;font-weight:700;color:#fff;margin-bottom:10px">'+currentQr.label+'</div>';
   html+='<div style="background:#fff;border-radius:12px;padding:12px;display:inline-block"><img src="'+qrUrl+'" width="180" height="180" style="display:block;image-rendering:pixelated"></div>';
   html+='<div style="font-size:13px;color:#7a7a99;margin-top:8px">'+currentQr.sub+'</div>';
-
-  // Dots indicator
   html+='<div style="display:flex;gap:6px;justify-content:center;margin-top:10px">';
-  for(var i=0;i<qrItems.length;i++){
-    var isActive=i===(stageQrIndex%qrItems.length);
+  for(var di=0;di<qrItems.length;di++){
+    var isActive=di===(stageQrIndex%qrItems.length);
     html+='<div style="width:'+(isActive?'20':'6')+'px;height:6px;border-radius:3px;background:'+(isActive?'#ff2d8a':'rgba(255,255,255,.2)')+';transition:all .3s"></div>';
   }
-  html+='</div>';
-  html+='</div>';
-
-  // Queue count
+  html+='</div></div>';
   html+='<div style="margin-top:20px;font-size:13px;color:#7a7a99">'+waiting.length+' singer'+(waiting.length!==1?'s':'')+' in line</div>';
 
-  // Sign up button (kiosk mode)
   if(state.kioskMode){
     html+='<button onclick="closeStageDisplay()" style="margin-top:24px;padding:18px 40px;background:linear-gradient(135deg,#ff2d8a,#ff6b35);color:#fff;border:none;border-radius:16px;font-size:20px;font-weight:900;cursor:pointer;font-family:\'Outfit\';letter-spacing:1px;box-shadow:0 8px 30px rgba(255,45,138,.4);animation:pu 2s infinite">🎤 TAP TO SIGN UP</button>';
   }
